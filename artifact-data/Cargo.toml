@@ -32,10 +32,10 @@ version = ">=0.3"
 
 [dev-dependencies]
 pretty_assertions = ">=0.4"
-proptest = ">=0.3"
-# proptest = {git="https://github.com/vitiral/proptest", branch="non-pin"}
-rand = ">=0.4.2"
-regex_generate = ">=0.2"
+proptest = ">=0.4.2"
+rand = "0.4.2"
+# regex_generate = ">=0.2"
+regex_generate = {file="../../ruststuff/regex_generate"}
 tempdir = ">=0.3"
 unicode-segmentation = ">=1.2"
 
