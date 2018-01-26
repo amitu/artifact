@@ -4,43 +4,40 @@ name = "artifact-data"
 version = "0.1.0"
 
 [dependencies]
-base64 = "0.9.0"
-either = "1.*"
-itertools = "0.7"
-lazy_static = "0.2"
-maplit = "1.*"
-matches = "0.1"
+base64 = ">=0.9.0"
+either = ">=1.0"
+failure = ">=0.1.1"
+failure_derive = ">=0.1.1"
+itertools = ">=0.7"
+lazy_static = ">=0.2"
+maplit = ">=1.0"
+matches = ">=0.1"
 path_abs = ">=0.3"
-petgraph = "0.4"
-rayon = "0.9"
-regex = "0.2"
-serde = "1.*"
-serde_derive = "1.*"
-serde_json = "1.*"
-serde_yaml = "0.7"
-siphasher = "0.2.2"
-std_prelude = "0.2"
-time = "0.1"
-toml = "0.4"
-walkdir = "2.*"
-
-[dependencies.failure]
-git = "https://github.com/withoutboats/failure"
-
-[dependencies.failure_derive]
-git = "https://github.com/withoutboats/failure_derive"
+petgraph = ">=0.4"
+rayon = ">=0.9"
+regex = ">=0.2"
+serde = ">=1.0"
+serde_derive = ">=1.0"
+serde_json = ">=1.0"
+serde_yaml = ">=0.7"
+siphasher = ">=0.2.2"
+std_prelude = ">=0.2"
+time = ">=0.1"
+toml = ">=0.4"
+walkdir = ">=2.0"
 
 [dependencies.ordermap]
 features = ["serde-1"]
-version = "0.3"
+version = ">=0.3"
 
 [dev-dependencies]
-pretty_assertions = "0.4"
-proptest = "0.3"
-rand = "0.3"
-regex_generate = "0.2"
-tempdir = "0.3"
-unicode-segmentation = "1.2"
+pretty_assertions = ">=0.4"
+proptest = ">=0.3"
+# proptest = {git="https://github.com/vitiral/proptest", branch="non-pin"}
+rand = ">=0.4.2"
+regex_generate = ">=0.2"
+tempdir = ">=0.3"
+unicode-segmentation = ">=1.2"
 
 [features]
 default = []
