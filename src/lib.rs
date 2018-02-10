@@ -16,7 +16,6 @@
  * */
 //! The CLI main binary
 
-
 #[allow(unused_imports)]
 #[macro_use]
 extern crate ergo;
@@ -30,38 +29,20 @@ use ergo::*;
 #[allow(unused_imports)]
 use quicli::prelude::*;
 
+mod ls;
 
-#[derive(Debug, StructOpt)]
-#[structopt(name="ls", about="List and filter artifacts")]
-pub(crate) struct Ls {
-    #[structopt(help="Pattern to search for")]
-    pattern: String,
-}
-
-pub fn run() -> Result<()> {
-    use quicli::prelude::structopt::clap::*;
+pub fn run() -> Result<i32> {
+    use quicli::structopt::clap::*;
     let app = structopt::clap::App::new("art")
         .author("vitiral")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Design documentation tool for everybody.")
-        .arg(Arg::with_name("verbose")
-             .short("v")
-             .multiple(true)
-             .help("Verbose, pass up to 4 times to increase the level")
-        )
-        .subcommand(Ls::clap());
+        .subcommand(ls::Ls::clap());
 
     let matches = app.get_matches();
-    set_log_verbosity(matches.occurrences_of("verbose"))?;
 
     match matches.subcommand() {
-        ("ls", Some(args)) => {
-            let ls = Ls::from_clap(args.clone());
-            eprintln!("GOT ls:\n{:#?}", ls);
-            eprintln!("pattern: {}", ls.pattern);
-        },
+        ("ls", Some(args)) => ls::run(ls::Ls::from_clap(args.clone())),
         (sub, _) => unimplemented!("sub: {}", sub),
     }
-
-    Ok(())
 }

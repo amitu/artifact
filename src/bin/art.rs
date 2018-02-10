@@ -1,12 +1,12 @@
 extern crate artifact_app;
+use std::process::exit;
 
 fn main() {
     match artifact_app::run() {
-        Ok(_) => {}
+        Ok(rc) => exit(rc),
         Err(e) => {
             eprintln!("{}", e);
-            ::std::process::exit(1);
+            exit(1);
         }
     }
 }
-

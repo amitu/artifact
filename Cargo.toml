@@ -39,7 +39,7 @@ path = "artifact-data"
 
 # [dependencies.jsonrpc-core]
 # version = "7.1.0"
-# 
+#
 # [dependencies.nickel]
 # version = "0.10.0"
 
