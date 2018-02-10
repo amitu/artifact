@@ -32,8 +32,8 @@ use quicli::prelude::*;
 mod ls;
 
 pub fn run() -> Result<i32> {
-    use quicli::structopt::clap::*;
-    let app = structopt::clap::App::new("art")
+    use quicli::prelude::structopt::clap::*;
+    let app = App::new("art")
         .author("vitiral")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Design documentation tool for everybody.")
