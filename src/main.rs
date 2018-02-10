@@ -27,15 +27,42 @@ use ergo::*;
 use quicli::prelude::*;
 
 
-fn main() {
-    fn run() -> Result<()> {
-        let app = structopt::clap::App::new("art");
-        // let args = app::from_args();
-        set_log_verbosity(0)?;
+#[derive(Debug, StructOpt)]
+#[structopt(name="ls", about="List and filter artifacts")]
+pub(crate) struct Ls {
+    #[structopt(help="Pattern to search for")]
+    pattern: String,
+}
 
-        Ok(())
+pub fn run() -> Result<()> {
+    use quicli::prelude::structopt::clap::*;
+    let app = structopt::clap::App::new("art")
+        .author("github.com/vitiral/artifact")
+        .version(env!("CARGO_PKG_VERSION"))
+        .about("Design documentation tool for everybody.")
+        .arg(Arg::with_name("verbose")
+             .short("v")
+             .multiple(true)
+             .help("Verbose, pass up to 4 times to increase the level")
+        )
+        .subcommand(Ls::clap());
+
+    let matches = app.get_matches();
+    set_log_verbosity(matches.occurrences_of("verbose"))?;
+
+    match matches.subcommand() {
+        ("ls", Some(args)) => {
+            let ls = Ls::from_clap(args.clone());
+            eprintln!("GOT ls:\n{:#?}", ls);
+            eprintln!("pattern: {}", ls.pattern);
+        },
+        (sub, _) => unimplemented!("sub: {}", sub),
     }
 
+    Ok(())
+}
+
+fn main() {
     match run() {
         Ok(_) => {}
         Err(e) => {
