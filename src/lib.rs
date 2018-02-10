@@ -17,13 +17,17 @@
 //! The CLI main binary
 
 
+#[allow(unused_imports)]
 #[macro_use]
 extern crate ergo;
 
+#[allow(unused_imports)]
 #[macro_use]
 extern crate quicli;
 
+#[allow(unused_imports)]
 use ergo::*;
+#[allow(unused_imports)]
 use quicli::prelude::*;
 
 
@@ -37,7 +41,7 @@ pub(crate) struct Ls {
 pub fn run() -> Result<()> {
     use quicli::prelude::structopt::clap::*;
     let app = structopt::clap::App::new("art")
-        .author("github.com/vitiral/artifact")
+        .author("vitiral")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Design documentation tool for everybody.")
         .arg(Arg::with_name("verbose")
@@ -60,14 +64,4 @@ pub fn run() -> Result<()> {
     }
 
     Ok(())
-}
-
-fn main() {
-    match run() {
-        Ok(_) => {}
-        Err(e) => {
-            eprintln!("{}", e);
-            ::std::process::exit(1);
-        }
-    }
 }
