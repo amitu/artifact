@@ -1,10 +1,5 @@
+use dev_prelude::*;
 use artifact_data;
-
-#[allow(unused_imports)]
-use ergo::*;
-#[allow(unused_imports)]
-use quicli::prelude::*;
-
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ls", about = "List and filter artifacts")]
@@ -61,6 +56,10 @@ Filter by spc (specification) completeness
 Filter by tst (test) completeness. See `-s/--spc` for format.")]
     pub tst: String,
 
+    #[structopt(short="N", long="name", help = "\
+\"name\" field: show the name of the artifact.")]
+    pub name: bool,
+
     #[structopt(short="F", long="file", help = "\
 \"file\" field: show the file where the artifact is defined.")]
     pub file: bool,
@@ -99,10 +98,143 @@ Type of output from [list, json]")]
 /// Run the `art ls` command
 pub fn run(cmd: Ls) -> Result<i32> {
     set_log_verbosity("art", cmd.verbosity)?;
-    let work_dir = match cmd.work_dir {
-        Some(d) => PathDir::new(d),
-        None => PathDir::current_dir(),
-    }?;
+    let work_dir = work_dir!(cmd);
     info!("Running art-ls in working directory {}", work_dir.display());
+
+    let (mut lints, project) = artifact_data::read_project(work_dir)?;
     Ok(0)
+}
+
+#[derive(Debug, Eq, PartialEq)]
+struct Flags {
+    name: bool,
+    file: bool,
+    parts: bool,
+    partof: bool,
+    code: bool,
+    text: bool,
+}
+
+lazy_static!{
+    pub static ref VALID_SEARCH_FIELDS: OrderSet<&'static str> = OrderSet::from_iter(
+        ["N", "F", "P", "O", "C", "T", "A",
+        "name", "file", "parts", "partof", "code", "text", "all"]
+        .iter().map(|s| *s));
+
+    pub static ref ANY_UPPERCASE: Regex = Regex::new("[A-Z]").unwrap();
+}
+
+impl Default for Flags {
+    fn default() -> Flags {
+        Flags {
+            name: true,
+            file: false,
+            parts: true,
+            partof: false,
+            code: false,
+            text: false,
+        }
+    }
+}
+
+impl Flags {
+    pub fn from_str<'a>(s: &'a str) -> Result<Flags> {
+        if s.is_empty() {
+            return Ok(Flags::default());
+        }
+        let first_char = s.chars().next().unwrap();
+        let flags: OrderSet<&'a str> = if s.contains(',') {
+            s.split(',').filter(|s| !s.is_empty()).collect()
+        } else if ANY_UPPERCASE.find(s).is_none() {
+            orderset!(s)
+        } else {
+            s.split("").filter(|s| !s.is_empty()).collect()
+        };
+
+        let invalid: OrderSet<&'a str> = flags
+            .difference(&VALID_SEARCH_FIELDS)
+            .map(|s| *s)
+            .collect();
+        ensure!(
+            invalid.is_empty(),
+            "Unknown fields: {:#?}",
+            invalid
+        );
+        let fc = |c| flags.contains(c);
+        let all = fc("A") || fc("all");
+        let out = Flags {
+            name: fc("N") || fc("name"),
+            file: fc("F") || fc("file"),
+            parts: fc("P") || fc("parts"),
+            partof: fc("O") || fc("partof"),
+            code: fc("C") || fc("code"),
+            text: fc("T") || fc("text"),
+        };
+        Ok(out.resolve_actual(all))
+    }
+
+    /// Get the given flags from the command
+    pub fn from_cmd(cmd: Ls) -> Flags {
+        let out = Flags {
+            name: cmd.name,
+            file: cmd.file,
+            parts: cmd.parts,
+            partof: cmd.partof,
+            code: cmd.code,
+            text: cmd.text,
+        };
+        out.resolve_actual(cmd.all)
+    }
+
+    /// Flags with `all` taken into account.
+    ///
+    /// If no flags are set then use the default.
+    fn resolve_actual(self, all: bool) -> Flags {
+        if all {
+            self.invert()
+        } else if self.is_empty() {
+            Flags::default()
+        } else {
+            self
+        }
+    }
+
+    /// Return whether no flags are set
+    pub fn is_empty(&self) -> bool {
+        !(self.name || self.file || self.parts || self.partof || self.code || self.text)
+    }
+
+    /// Invert the flag selection.
+    fn invert(&self) -> Flags {
+        Flags {
+            name: !self.name,
+            file: !self.file,
+            parts: !self.parts,
+            partof: !self.partof,
+            code: !self.code,
+            text: !self.text,
+        }
+    }
+
+}
+
+#[test]
+fn test_flags_str() {
+    let mut flags = Flags::default();
+    macro_rules! from_str { ($f:expr) => {{
+        expect!(Flags::from_str($f))
+    }}}
+    assert_eq!(flags, from_str!(""));
+    assert_eq!(flags, from_str!("NP"));
+    assert_eq!(flags, from_str!("N,parts"));
+    assert_eq!(flags, from_str!("name,parts"));
+    assert_eq!(flags, from_str!("AFOCT"));
+    flags.text = true;
+    assert_eq!(flags, from_str!("NTP"));
+    assert_eq!(flags, from_str!("TNP"));
+    assert_eq!(flags, from_str!("text,parts,name"));
+    flags.parts = false;
+    flags.text = false;
+    assert_eq!(flags, from_str!("N"));
+    assert_eq!(flags, from_str!("name"));
 }

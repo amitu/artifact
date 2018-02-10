@@ -33,6 +33,8 @@ structopt-derive = "0.1.6"
 termstyle = "0.1.1"
 unicode-segmentation = "1.2.0"
 unicode-width = "0.1.4"
+expect_macro = "0.2.0"
+ordermap = "0.4.0"
 
 [dependencies.artifact-data]
 path = "artifact-data"

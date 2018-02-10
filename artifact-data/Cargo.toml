@@ -16,6 +16,7 @@ siphasher = "0.2.2"
 time = "0.1"
 failure = "0.1"
 failure_derive = "0.1"
+log = "0.4.1"
 
 [dependencies.ordermap]
 features = ["serde-1"]

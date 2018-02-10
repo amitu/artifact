@@ -23,14 +23,25 @@ extern crate artifact_data;
 #[macro_use]
 extern crate ergo;
 
+#[macro_use]
+extern crate ordermap;
+
 #[allow(unused_imports)]
 #[macro_use]
 extern crate quicli;
+
+#[macro_use]
+extern crate expect_macro;
 
 #[allow(unused_imports)]
 use ergo::*;
 #[allow(unused_imports)]
 use quicli::prelude::*;
+
+
+// macro modules must come first
+#[macro_use]
+mod dev_prelude;
 
 mod ls;
 

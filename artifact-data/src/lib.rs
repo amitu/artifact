@@ -39,6 +39,9 @@ extern crate siphasher;
 extern crate failure_derive;
 extern crate time;
 
+#[macro_use]
+extern crate log;
+
 // MODULES
 
 mod artifact;
