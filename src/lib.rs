@@ -16,6 +16,9 @@
  * */
 //! The CLI main binary
 
+#[macro_use]
+extern crate artifact_data;
+
 #[allow(unused_imports)]
 #[macro_use]
 extern crate ergo;

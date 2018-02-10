@@ -1,10 +1,14 @@
+use artifact_data;
+
 #[allow(unused_imports)]
 use ergo::*;
 #[allow(unused_imports)]
 use quicli::prelude::*;
 
+
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ls", about = "List and filter artifacts")]
+#[cfg_attr(rustfmt, rustfmt_skip)]
 pub struct Ls {
     /// Pass many times for more log output.
     #[structopt(long = "verbose", short = "v")]
@@ -15,6 +19,7 @@ Regular expression to search for artifact names.")]
     pub pattern: String,
 
     #[structopt(short="f", long="fields", value_name="FIELDS",
+      default_value="name,parts",
       help="\
 Specify fields to search for the regular expression PATTERN.
 
@@ -37,22 +42,22 @@ or text fields of all artifacts.
 Regular expressions use the rust regular expression syntax, which is almost
 identical to perl/python with a few minor differences
 
-https://doc.rust-lang.org/regex/regex/index.html#syntax.\n ")]
+https://doc.rust-lang.org/regex/regex/index.html#syntax.\n\n    ")]
     pub fields: String,
 
     #[structopt(short="l", long="long", help = "Print items in the 'long form'")]
     pub long: bool,
 
 
-    #[structopt(short="s", long="spc", help = "\
+    #[structopt(short="s", long="spc", default_value=">0", help = "\
 Filter by spc (specification) completeness
 - `-s \"<45\"`: show only items with spc <= 45%.
 - `-s \">45\"`: show only items with spc >= 45%.
 - `-s \"<\"`  : show only items with spc <=  0%.
-- `-s \">\"`  : show only items with spc >=100%\n ")]
+- `-s \">\"`  : show only items with spc >=100%\n\n    ")]
     pub spc: String,
 
-    #[structopt(short="t", long="tst", help = "\
+    #[structopt(short="t", long="tst", default_value=">0", help = "\
 Filter by tst (test) completeness. See `-s/--spc` for format.")]
     pub tst: String,
 
@@ -76,15 +81,28 @@ Filter by tst (test) completeness. See `-s/--spc` for format.")]
 \"text\" field: show the text of the artifact")]
     pub text: bool,
 
+    #[structopt(short="A", long="all", help = "\
+\"all\" field: activate ALL fields, additional fields DEACTIVATE fields")]
+    pub all: bool,
+
     #[structopt(long="plain", help = "Do not display color in the output.")]
     pub plain: bool,
 
-    #[structopt(long="type", help = "\
-Type of output, default 'list'. Supported types: [list, json]")]
+    #[structopt(long="type", default_value="list", help = "\
+Type of output from [list, json]")]
     pub ty_: String,
+
+    #[structopt(long="work-dir", help = "Use a different working directory [default: $CWD]")]
+    pub work_dir: Option<String>,
 }
 
+/// Run the `art ls` command
 pub fn run(cmd: Ls) -> Result<i32> {
-    set_log_verbosity(cmd.verbosity)?;
+    set_log_verbosity("art", cmd.verbosity)?;
+    let work_dir = match cmd.work_dir {
+        Some(d) => PathDir::new(d),
+        None => PathDir::current_dir(),
+    }?;
+    info!("Running art-ls in working directory {}", work_dir.display());
     Ok(0)
 }
