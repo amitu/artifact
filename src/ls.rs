@@ -1,5 +1,6 @@
 use dev_prelude::*;
-use artifact_data;
+use artifact_data::{self, Artifact, Completed};
+use termstyle::{self, El, Text};
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ls", about = "List and filter artifacts")]
@@ -105,7 +106,7 @@ pub fn run(cmd: Ls) -> Result<i32> {
     Ok(0)
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 struct Flags {
     name: bool,
     file: bool,
@@ -151,15 +152,9 @@ impl Flags {
             s.split("").filter(|s| !s.is_empty()).collect()
         };
 
-        let invalid: OrderSet<&'a str> = flags
-            .difference(&VALID_SEARCH_FIELDS)
-            .map(|s| *s)
-            .collect();
-        ensure!(
-            invalid.is_empty(),
-            "Unknown fields: {:#?}",
-            invalid
-        );
+        let invalid: OrderSet<&'a str> =
+            flags.difference(&VALID_SEARCH_FIELDS).map(|s| *s).collect();
+        ensure!(invalid.is_empty(), "Unknown fields: {:#?}", invalid);
         let fc = |c| flags.contains(c);
         let all = fc("A") || fc("all");
         let out = Flags {
@@ -215,8 +210,37 @@ impl Flags {
             text: !self.text,
         }
     }
-
 }
+
+trait ArtifactExt {
+    fn line_style(&self, flags: &Flags, plain: bool) -> Vec<El>;
+}
+
+trait CompletedExt {
+    fn spc_style(&self) -> Text;
+    fn tst_style(&self) -> Text;
+}
+
+impl CompletedExt for Completed {
+    fn spc_style(&self) -> Text {
+        let mut f = format!("{: >5.*}", 1, self.spc * 100.0);
+        Text::new(f)
+    }
+
+    fn tst_style(&self) -> Text {
+        let mut f = format!("{: >5.*}", 1, self.tst * 100.0);
+        Text::new(f)
+    }
+}
+
+// impl ArtifactExt for Artifact {
+//     fn line_style(&self, flags: &Flags, plain: bool) -> Vec<El> {
+//         let mut out = Vec::new();
+//     }
+//
+//     fn completed_style(&self) -> Text {
+//     }
+// }
 
 #[test]
 fn test_flags_str() {
@@ -237,4 +261,25 @@ fn test_flags_str() {
     flags.text = false;
     assert_eq!(flags, from_str!("N"));
     assert_eq!(flags, from_str!("name"));
+}
+
+#[test]
+fn test_style() {
+    {
+        let completed = Completed {
+            spc: 0.33435234,
+            tst: 1.0,
+        };
+        assert_eq!(Text::new(" 33.4".into()), completed.spc_style());
+        assert_eq!(Text::new("100.0".into()), completed.tst_style());
+    }
+
+    {
+        let completed = Completed {
+            spc: 0.05,
+            tst: 0.0,
+        };
+        assert_eq!(Text::new("  5.0".into()), completed.spc_style());
+        assert_eq!(Text::new("  0.0".into()), completed.tst_style());
+    }
 }
