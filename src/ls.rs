@@ -97,7 +97,7 @@ Filter by tst (test) completeness. See `-s/--spc` for format.")]
 
     #[structopt(long="type", default_value="list", help = "\
 Type of output from [list, json]")]
-    pub ty_: String,
+    pub output_ty: String,
 
     #[structopt(long="work-dir", help = "Use a different working directory [default: $CWD]")]
     pub work_dir: Option<String>,
@@ -116,10 +116,20 @@ pub fn run(cmd: Ls) -> Result<i32> {
     let mut filtered = filter_artifacts(&cmd, &project.artifacts)?;
     filtered.sort();
 
+    let ty_ = OutputType::from_str(&cmd.output_ty)?;
+    if ty_ == OutputType::Json {
+        let artifacts: Vec<_> = filtered.iter().map(|n| project.artifacts.get(n)).collect();
+        write!(w, "{}", expect!(json::to_string_pretty(&artifacts)));
+        return Ok(0);
+    }
+
     if cmd.long {
         for name in filtered.iter() {
             let art = &project.artifacts[name];
-            for el in &art.full_style(&project.artifacts, &display_flags, cmd.plain) {
+            for el in &mut art.full_style(&project.artifacts, &display_flags) {
+                if cmd.plain {
+                    el.set_plain();
+                }
                 el.paint(&mut w)?;
             }
         }
@@ -212,9 +222,29 @@ fn display_table<W: IoWrite>(
     rows.extend(
         filtered
             .iter()
-            .map(|name| artifacts[name].line_style(artifacts, &display_flags, cmd.plain)),
+            .map(|name| artifacts[name].line_style(artifacts, &display_flags)),
     );
-    El::Table(Table::new(rows)).paint(w)
+    let mut table = El::Table(Table::new(rows));
+    if cmd.plain {
+        table.set_plain();
+    }
+    table.paint(w)
+}
+
+#[derive(Debug, Eq, PartialEq)]
+enum OutputType {
+    List,
+    Json,
+}
+
+impl OutputType {
+    fn from_str(s: &str) -> Result<OutputType> {
+        Ok(match s {
+            "list" => OutputType::List,
+            "json" => OutputType::Json,
+            _ => bail!("Invalid output type: {}", s),
+        })
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -235,6 +265,7 @@ lazy_static!{
 
     pub static ref ANY_UPPERCASE: Regex = Regex::new("[A-Z]").unwrap();
 }
+
 
 impl Default for Flags {
     fn default() -> Flags {
@@ -260,7 +291,6 @@ impl Flags {
 
     pub fn from_str<'a>(s: &'a str) -> Result<Flags> {
         ensure!(!s.is_empty(), "Must search at least one field");
-        let first_char = s.chars().next().unwrap();
         let flags: OrderSet<&'a str> = if s.contains(',') {
             s.split(',').filter(|s| !s.is_empty()).collect()
         } else if !ANY_UPPERCASE.is_match(s) {
@@ -326,8 +356,6 @@ impl Flags {
 
     /// Return the number of flags set
     pub fn len(&self) -> usize {
-        macro_rules! u { [$v:expr] => {{ $v as usize }}}
-
         macro_rules! add { [ $( $x:expr ),* ] => {{
             let mut out = 0;
             $( out += $x as usize; )*
@@ -362,14 +390,12 @@ trait ArtifactExt {
         &self,
         artifacts: &OrderMap<Name, Artifact>,
         flags: &Flags,
-        plain: bool,
     ) -> Vec<Vec<Text>>;
 
     fn full_style(
         &self,
         artifacts: &OrderMap<Name, Artifact>,
         flags: &Flags,
-        plain: bool,
     ) -> Vec<El>;
 
     fn name_style(&self) -> Text;
@@ -380,7 +406,6 @@ impl ArtifactExt for Artifact {
         &self,
         artifacts: &OrderMap<Name, Artifact>,
         flags: &Flags,
-        plain: bool,
     ) -> Vec<Vec<Text>> {
         let mut out = Vec::with_capacity(flags.len() + 2);
         macro_rules! cell { [$item:expr] => {{
@@ -417,7 +442,6 @@ impl ArtifactExt for Artifact {
         &self,
         artifacts: &OrderMap<Name, Artifact>,
         flags: &Flags,
-        plain: bool,
     ) -> Vec<El> {
         let mut out = Vec::new();
 
@@ -631,5 +655,5 @@ fn test_style() {
         vec![],
     ];
     let flags = Flags::default();
-    assert_eq!(expected, art.line_style(&artifacts, &flags, false));
+    assert_eq!(expected, art.line_style(&artifacts, &flags));
 }
