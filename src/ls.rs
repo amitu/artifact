@@ -23,7 +23,7 @@ Regular expression to search for artifact names.")]
     pub pattern: Option<String>,
 
     #[structopt(short="f", long="fields", value_name="FIELDS",
-      default_value="name,parts",
+      default_value="name",
       help="\
 Specify fields to search for the regular expression PATTERN.
 
@@ -32,7 +32,6 @@ Valid FIELDS are:
 - F/file: search the \"file\" field (see -F)
 - P/parts: search the \"parts\" field (see -P)
 - O/partof: search the \"partof\" field (see -O)
-- I/impl: search the \"impl\" field (see -I)
 - T/text: search the \"text\" field (see -T)
 
 Fields can be listed by all caps, or comma-separated lowercase.
@@ -114,28 +113,81 @@ pub fn run(cmd: Ls) -> Result<i32> {
 
     let (_, project) = read_project(work_dir)?;
     let display_flags = Flags::from_cmd(&cmd);
+    let mut filtered = filter_artifacts(&cmd, &project.artifacts)?;
+    filtered.sort();
 
     if cmd.long {
-        for art in project.artifacts.values() {
+        for name in filtered.iter() {
+            let art = &project.artifacts[name];
             for el in &art.full_style(&project.artifacts, &display_flags, cmd.plain) {
                 el.paint(&mut w)?;
             }
         }
     } else {
-        display_table(&mut w, &project.artifacts, &display_flags, &cmd)?;
+        display_table(&mut w, &cmd, &display_flags, &filtered, &project.artifacts)?;
     }
 
     Ok(0)
 }
 
+fn filter_artifacts(cmd: &Ls, artifacts: &OrderMap<Name, Artifact>) -> Result<OrderSet<Name>> {
+    let fields = Flags::from_str(&cmd.fields)?;
+    ensure!(!fields.impl_, "I/impl field not supported in search");
+    let re = match cmd.pattern {
+        Some(ref p) => {
+            if p.starts_with("(?") {
+                Regex::new(p)
+            } else {
+                // ignore case by default
+                Regex::new(&format!("(?i){}", p))
+            }?
+        }
+        None => return Ok(artifacts.keys().cloned().collect()),
+    };
+    // return true if we should keep
+    let filter_map = |(name, art): (&Name, &Artifact)| -> Option<Name> {
+        debug_assert_eq!(name, &art.name);
+        macro_rules! check { [$field:expr] => {{
+            if !re.is_match($field) {
+                return None;
+            }
+        }}}
+
+        if fields.name {
+            check!(art.name.as_str());
+        }
+        if fields.file {
+            check!(&art.file.to_string_lossy())
+        }
+        if fields.parts {
+            if art.parts.iter().all(|n| !re.is_match(n.as_str())) {
+                return None;
+            }
+        }
+        if fields.partof {
+            if art.partof.iter().all(|n| !re.is_match(n.as_str())) {
+                return None;
+            }
+        }
+        if fields.text {
+            check!(&art.text);
+        }
+
+        Some(name.clone())
+    };
+
+    Ok(artifacts.iter().filter_map(filter_map).collect())
+}
+
 /// SPC-cli-ls.table
 fn display_table<W: IoWrite>(
     w: &mut W,
-    artifacts: &OrderMap<Name, Artifact>,
-    display_flags: &Flags,
     cmd: &Ls,
+    display_flags: &Flags,
+    filtered: &OrderSet<Name>,
+    artifacts: &OrderMap<Name, Artifact>,
 ) -> io::Result<()> {
-    let mut header = vec![vec![t!("spc%").bold()], vec![t!(" | tst%").bold()]];
+    let mut header = vec![vec![t!("spc%").bold()], vec![t!("tst%").bold()]];
     if display_flags.name {
         header.push(vec![t!(" | name").bold()]);
     }
@@ -154,13 +206,13 @@ fn display_table<W: IoWrite>(
     if display_flags.text {
         header.push(vec![t!(" | text").bold()]);
     }
-    let mut rows = Vec::with_capacity(artifacts.len() + 1);
+    let mut rows = Vec::with_capacity(filtered.len() + 1);
     rows.push(header);
 
     rows.extend(
-        artifacts
-            .values()
-            .map(|art| art.line_style(artifacts, &display_flags, cmd.plain)),
+        filtered
+            .iter()
+            .map(|name| artifacts[name].line_style(artifacts, &display_flags, cmd.plain)),
     );
     El::Table(Table::new(rows)).paint(w)
 }
@@ -186,22 +238,28 @@ lazy_static!{
 
 impl Default for Flags {
     fn default() -> Flags {
-        Flags {
-            name: true,
-            file: false,
-            parts: true,
-            partof: false,
-            impl_: false,
-            text: false,
-        }
+        let mut out = Flags::empty();
+        out.name = true;
+        out.parts = true;
+        out
     }
 }
 
 impl Flags {
-    pub fn from_str<'a>(s: &'a str) -> Result<Flags> {
-        if s.is_empty() {
-            return Ok(Flags::default());
+    pub fn empty() -> Flags {
+        Flags {
+            name: false,
+            file: false,
+            parts: false,
+            partof: false,
+            impl_: false,
+            text: false,
         }
+
+    }
+
+    pub fn from_str<'a>(s: &'a str) -> Result<Flags> {
+        ensure!(!s.is_empty(), "Must search at least one field");
         let first_char = s.chars().next().unwrap();
         let flags: OrderSet<&'a str> = if s.contains(',') {
             s.split(',').filter(|s| !s.is_empty()).collect()
@@ -332,7 +390,7 @@ impl ArtifactExt for Artifact {
         }}};
 
         out.push(vec![self.completed.spc_style()]);
-        cell!(vec![self.completed.tst_style()]);
+        out.push(vec![self.completed.tst_style()]);
 
         if flags.name {
             cell!(vec![self.name_style()])
