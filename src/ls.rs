@@ -1,6 +1,7 @@
 use dev_prelude::*;
 use artifact_data::*;
-use termstyle::{self, El, Text, Color};
+use termstyle::{self, Color, El, Text};
+use termstyle::Color::*;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ls", about = "List and filter artifacts")]
@@ -187,16 +188,30 @@ impl Flags {
     fn resolve_actual(self, all: bool) -> Flags {
         if all {
             self.invert()
-        } else if self.is_empty() {
+        } else if self.len() == 0 {
             Flags::default()
         } else {
             self
         }
     }
 
-    /// Return whether no flags are set
-    pub fn is_empty(&self) -> bool {
-        !(self.name || self.file || self.parts || self.partof || self.code || self.text)
+    /// Return the number of flags set
+    pub fn len(&self) -> usize {
+        macro_rules! u { [$v:expr] => {{ $v as usize }}}
+
+        macro_rules! add { ( $( $x:expr ),* ) => {{
+            let mut out = 0;
+            $( out += $x as usize; )*
+            out
+        }}}
+        add!(
+            self.name,
+            self.file,
+            self.parts,
+            self.partof,
+            self.code,
+            self.text
+        )
     }
 
     /// Invert the flag selection.
@@ -212,32 +227,91 @@ impl Flags {
     }
 }
 
+/// Faster `Text`
+macro_rules! t { [$t:expr] => {{
+    Text::new($t.into())
+}}}
+
 trait ArtifactExt {
-    fn line_style(&self, flags: &Flags, plain: bool) -> Vec<Vec<Text>>;
+    fn line_style(
+        &self,
+        artifacts: &OrderMap<Name, Artifact>,
+        flags: &Flags,
+        plain: bool,
+    ) -> Vec<Vec<Text>>;
     fn name_style(&self) -> Text;
 }
 
 impl ArtifactExt for Artifact {
-    fn line_style(&self, flags: &Flags, plain: bool) -> Vec<Vec<Text>> {
-        // first col: spc+tst
-        let mut out = vec![
-            vec![
-                self.completed.spc_style(),
-                Text::new(" ".into()),
-                self.completed.tst_style(),
-            ],
-        ];
+    fn line_style(
+        &self,
+        artifacts: &OrderMap<Name, Artifact>,
+        flags: &Flags,
+        plain: bool,
+    ) -> Vec<Vec<Text>> {
+        let mut out = Vec::with_capacity(flags.len() + 2);
+        macro_rules! push { [$item:expr] => {{
+            let mut cell = $item;
+            cell.push(t!("|"));
+            out.push(cell);
+        }}};
+
+        out.push(vec![self.completed.spc_style()]);
+        push!(vec![self.completed.tst_style()]);
 
         if flags.name {
-            out.push(vec![self.name_style()])
+            push!(vec![self.name_style()])
         }
-
+        if flags.parts {
+            push!(lookup_name_styles(artifacts, &self.parts));
+        }
+        if flags.partof {
+            push!(lookup_name_styles(artifacts, &self.partof));
+        }
+        if flags.file {
+            push!(vec![t!(self.file.display().to_string())]);
+        }
+        if flags.code {
+            push!(vec![t!(self.impl_.to_string())]);
+        }
+        if flags.text {
+            push!(vec![t!(truncate(&self.text, 30))]);
+        }
+        let last = out.len() - 1;
+        out[last].pop(); // remove last `|`
         out
     }
 
     fn name_style(&self) -> Text {
-        Text::new(self.name.as_str().into())
+        t!(self.name.as_str()).color(self.completed.name_color())
     }
+}
+
+/// Truncate a string up to a certain number of _characters_.
+fn truncate(s: &str, len: usize) -> String {
+    let mut out = String::new();
+    for c in s.chars().take(len) {
+        out.push(c);
+    }
+    out
+}
+
+/// Find the styles of names that may or may not exist.
+fn lookup_name_styles(artifacts: &OrderMap<Name, Artifact>, names: &OrderSet<Name>) -> Vec<Text> {
+    let lookup = |name: &Name| match artifacts.get(name) {
+        None => t!(name.as_str()).italic(),
+        Some(art) => art.name_style(),
+    };
+
+    let mut out = Vec::new();
+    for name in names {
+        out.push(lookup(name));
+        out.push(t!(", "));
+    }
+    if !out.is_empty() {
+        out.pop(); // remove trailing comma
+    }
+    out
 }
 
 trait CompletedExt {
@@ -245,18 +319,20 @@ trait CompletedExt {
     fn spc_points(&self) -> u8;
     fn tst_style(&self) -> Text;
     fn tst_points(&self) -> u8;
+    fn name_color(&self) -> Color;
 }
 
 impl CompletedExt for Completed {
+    /// #SPC-ls.color_spc
     fn spc_style(&self) -> Text {
         let color = match self.spc_points() {
-            0 => Color::Red,
-            1 | 2 => Color::Yellow,
-            3 => Color::Green,
+            0 => Red,
+            1 => Yellow,
+            2 => Blue,
+            3 => Green,
             _ => unreachable!(),
         };
-        Text::new(format!("{:.1}", self.spc * 100.0))
-            .color(color)
+        t!(format!("{:.1}", self.spc * 100.0)).color(color)
     }
 
     fn spc_points(&self) -> u8 {
@@ -271,15 +347,15 @@ impl CompletedExt for Completed {
         }
     }
 
+    /// #SPC-ls.color_spc
     fn tst_style(&self) -> Text {
         let color = match self.tst_points() {
-            0 => Color::Red,
-            1 => Color::Yellow,
-            2 => Color::Green,
+            0 => Red,
+            1 => Yellow,
+            2 => Green,
             _ => unreachable!(),
         };
-        Text::new(format!("{:.1}", self.tst * 100.0))
-            .color(color)
+        t!(format!("{:.1}", self.tst * 100.0)).color(color)
     }
 
     fn tst_points(&self) -> u8 {
@@ -289,6 +365,17 @@ impl CompletedExt for Completed {
             1
         } else {
             0
+        }
+    }
+
+    /// #SPC-ls.color_name
+    fn name_color(&self) -> Color {
+        match self.spc_points() + self.tst_points() {
+            0 => Red,
+            1 | 2 => Yellow,
+            3 | 4 => Blue,
+            5 => Green,
+            _ => unreachable!(),
         }
     }
 }
@@ -316,17 +403,13 @@ fn test_flags_str() {
 
 #[test]
 fn test_style() {
-    macro_rules! t { [$t:expr] => {{
-        Text::new($t.into())
-    }}}
-
     {
         let completed = Completed {
             spc: 0.33435234,
             tst: 1.0,
         };
-        assert_eq!(t!("33.4").color(Color::Red), completed.spc_style());
-        assert_eq!(t!("100.0").color(Color::Green), completed.tst_style());
+        assert_eq!(t!("33.4").color(Red), completed.spc_style());
+        assert_eq!(t!("100.0").color(Green), completed.tst_style());
     }
 
     {
@@ -334,8 +417,8 @@ fn test_style() {
             spc: 0.05,
             tst: 0.0,
         };
-        assert_eq!(t!("5.0").color(Color::Red), completed.spc_style());
-        assert_eq!(t!("0.0").color(Color::Red), completed.tst_style());
+        assert_eq!(t!("5.0").color(Red), completed.spc_style());
+        assert_eq!(t!("0.0").color(Red), completed.tst_style());
     }
 
     let art = Artifact {
@@ -352,14 +435,19 @@ fn test_style() {
         impl_: Impl::NotImpl,
         subnames: orderset!{},
     };
+    let artifacts = ordermap![
+        name!("REQ-foo") => art.clone(),
+    ];
+
     let expected = vec![
-        vec![
-            t!("100.0").color(Color::Green),
-            t!(" "),
-            t!("0.3").color(Color::Red),
-        ],
-        vec![t!("REQ-foo")],
+        // % spc+tst completed
+        vec![t!("100.0").color(Green)],
+        vec![t!("0.3").color(Red), t!("|")],
+        // name
+        vec![t!("REQ-foo").color(Blue), t!("|")],
+        // parts
+        vec![],
     ];
     let flags = Flags::default();
-    assert_eq!(expected, art.line_style(&flags, false));
+    assert_eq!(expected, art.line_style(&artifacts, &flags, false));
 }

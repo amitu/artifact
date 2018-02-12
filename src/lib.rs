@@ -16,13 +16,15 @@
  * */
 //! The CLI main binary
 
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 #[macro_use]
 extern crate artifact_data;
 
 #[allow(unused_imports)]
 #[macro_use]
 extern crate ergo;
-
 
 #[macro_use]
 extern crate ordermap;

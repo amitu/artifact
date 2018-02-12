@@ -64,17 +64,17 @@ The following are the general rules:
 - Names that are in ERROR will be `bold red`.
 
 For [[.color_spc]], the levels are:
-- `(100%,    70%,    40%,  0%)`: percentage spc
-- `(   3,      2,      1,   0)`: points
-- `(blue, yellow, yellow, red)`: colors
+- `( 100%,  70%,    40%,  0%)`: percentage spc
+- `(    3,    2,      1,   0)`: points
+- `(green, blue, yellow, red)`: colors
 
 For [[.color_tst]], the levels are:
-- `(100%,    50%,  0%)`: percentage tst
-- `(   2,      1,   0)`: points
-- `(blue, yellow, red)`: colors for tst
+- `( 100%,    50%,  0%)`: percentage tst
+- `(    2,      1,   0)`: points
+- `(green, yellow, red)`: colors for tst
 
-Add these together and you get the following:
-- 5: Everything green
+For [[.color_name]] you add the two points together:
+- 5: Name is Green
 - 3-4: name is blue
 - 1-2: name is yellow
 - 0: name is red
