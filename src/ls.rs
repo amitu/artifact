@@ -295,8 +295,8 @@ impl Flags {
             impl_: cmd.impl_,
             text: cmd.text,
         };
-        let out = if !cmd.all && cmd.long && out.len() == 0 {
-            // For the "long" form we display everything
+        let out = if cmd.long && !cmd.all && out.len() == 0 {
+            // For the "long" form we display everything by default
             Flags {
                 name: true,
                 file: true,
@@ -408,7 +408,7 @@ impl ArtifactExt for Artifact {
             cell!(vec![t!(self.impl_.to_string())]);
         }
         if flags.text {
-            cell!(vec![t!(truncate(&self.text, 30))]);
+            cell!(vec![t!(truncate(&self.text, 30).replace("\n", "\\n"))]);
         }
         out
     }
