@@ -199,7 +199,7 @@ impl Flags {
     pub fn len(&self) -> usize {
         macro_rules! u { [$v:expr] => {{ $v as usize }}}
 
-        macro_rules! add { ( $( $x:expr ),* ) => {{
+        macro_rules! add { [ $( $x:expr ),* ] => {{
             let mut out = 0;
             $( out += $x as usize; )*
             out
@@ -232,6 +232,10 @@ macro_rules! t { [$t:expr] => {{
     Text::new($t.into())
 }}}
 
+macro_rules! e { [$t:expr] => {{
+    El::new($e)
+}}}
+
 trait ArtifactExt {
     fn line_style(
         &self,
@@ -239,6 +243,14 @@ trait ArtifactExt {
         flags: &Flags,
         plain: bool,
     ) -> Vec<Vec<Text>>;
+
+    fn full_style(
+        &self,
+        artifacts: &OrderMap<Name, Artifact>,
+        flags: &Flags,
+        plain: bool,
+    ) -> Vec<El>;
+
     fn name_style(&self) -> Text;
 }
 
@@ -279,6 +291,55 @@ impl ArtifactExt for Artifact {
         }
         let last = out.len() - 1;
         out[last].pop(); // remove last `|`
+        out
+    }
+
+    fn full_style(
+        &self,
+        artifacts: &OrderMap<Name, Artifact>,
+        flags: &Flags,
+        plain: bool,
+    ) -> Vec<El> {
+        let mut out = Vec::new();
+
+        macro_rules! line { [ $( $x:expr ),* ] => {{
+            $( out.push(El::Text($x)); )*
+            out.push(El::Text(t!("\n")));
+        }}}
+
+        macro_rules! extend_names { [ $title:expr, $x:expr ] => {{
+            line![t!(concat!($title, ":\n")).bold()];
+            for name in lookup_name_styles(artifacts, &$x) {
+                line![t!("- ").bold(), name];
+            }
+        }}}
+
+        // Name and completion
+        line![t!("# ").bold(), self.name_style().bold(), t!("\n")];
+        line![
+            t!("Completed: spc=").bold(), self.completed.spc_style(),
+            t!("%  tst=").bold(), self.completed.tst_style(),
+            t!("%").bold()
+        ];
+
+        if flags.file {
+            line![t!("File: ").bold(), t!(self.file.display().to_string())];
+        }
+        if flags.code {
+            line![t!("Code: ").bold(), t!(self.impl_.to_string())];
+        }
+        if flags.parts {
+            extend_names!("Parts", self.parts);
+        }
+        if flags.partof {
+            extend_names!("Partof", self.partof);
+        }
+        if flags.text {
+            line![t!(self.text.trim_right().to_string())]
+        }
+
+        line![t!("\n\n")];
+
         out
     }
 
