@@ -25,7 +25,7 @@ Valid FIELDS are:
 - F/file: search the \"file\" field (see -F)
 - P/parts: search the \"parts\" field (see -P)
 - O/partof: search the \"partof\" field (see -O)
-- C/code: search the \"code\" field (see -C)
+- D/done: search the \"done\" field (see -D)
 - T/text: search the \"text\" field (see -T)
 
 Fields can be listed by all caps, or comma-separated lowercase.
@@ -74,9 +74,9 @@ Filter by tst (test) completeness. See `-s/--spc` for format.")]
 \"partof\" field: show the parents of the artifact.")]
     pub partof: bool,
 
-    #[structopt(short="C", long="code", help = "\
-\"code\" field: show the code paths where the artifact is implemented.")]
-    pub code: bool,
+    #[structopt(short="D", long="done", help = "\
+\"done\" field: show the where the artifact is implemented.")]
+    pub done: bool,
 
     #[structopt(short="T", long="text", help = "\
 \"text\" field: show the text of the artifact")]
@@ -113,14 +113,14 @@ struct Flags {
     file: bool,
     parts: bool,
     partof: bool,
-    code: bool,
+    done: bool,
     text: bool,
 }
 
 lazy_static!{
     pub static ref VALID_SEARCH_FIELDS: OrderSet<&'static str> = OrderSet::from_iter(
-        ["N", "F", "P", "O", "C", "T", "A",
-        "name", "file", "parts", "partof", "code", "text", "all"]
+        ["N", "F", "P", "O", "D", "T", "A",
+        "name", "file", "parts", "partof", "done", "text", "all"]
         .iter().map(|s| *s));
 
     pub static ref ANY_UPPERCASE: Regex = Regex::new("[A-Z]").unwrap();
@@ -133,7 +133,7 @@ impl Default for Flags {
             file: false,
             parts: true,
             partof: false,
-            code: false,
+            done: false,
             text: false,
         }
     }
@@ -147,7 +147,7 @@ impl Flags {
         let first_char = s.chars().next().unwrap();
         let flags: OrderSet<&'a str> = if s.contains(',') {
             s.split(',').filter(|s| !s.is_empty()).collect()
-        } else if ANY_UPPERCASE.find(s).is_none() {
+        } else if !ANY_UPPERCASE.is_match(s) {
             orderset!(s)
         } else {
             s.split("").filter(|s| !s.is_empty()).collect()
@@ -163,7 +163,7 @@ impl Flags {
             file: fc("F") || fc("file"),
             parts: fc("P") || fc("parts"),
             partof: fc("O") || fc("partof"),
-            code: fc("C") || fc("code"),
+            done: fc("D") || fc("done"),
             text: fc("T") || fc("text"),
         };
         Ok(out.resolve_actual(all))
@@ -176,7 +176,7 @@ impl Flags {
             file: cmd.file,
             parts: cmd.parts,
             partof: cmd.partof,
-            code: cmd.code,
+            done: cmd.done,
             text: cmd.text,
         };
         out.resolve_actual(cmd.all)
@@ -209,7 +209,7 @@ impl Flags {
             self.file,
             self.parts,
             self.partof,
-            self.code,
+            self.done,
             self.text
         )
     }
@@ -221,7 +221,7 @@ impl Flags {
             file: !self.file,
             parts: !self.parts,
             partof: !self.partof,
-            code: !self.code,
+            done: !self.done,
             text: !self.text,
         }
     }
@@ -283,7 +283,7 @@ impl ArtifactExt for Artifact {
         if flags.file {
             push!(vec![t!(self.file.display().to_string())]);
         }
-        if flags.code {
+        if flags.done {
             push!(vec![t!(self.impl_.to_string())]);
         }
         if flags.text {
@@ -325,8 +325,8 @@ impl ArtifactExt for Artifact {
         if flags.file {
             line![t!("File: ").bold(), t!(self.file.display().to_string())];
         }
-        if flags.code {
-            line![t!("Code: ").bold(), t!(self.impl_.to_string())];
+        if flags.done {
+            line![t!("Done: ").bold(), t!(self.impl_.to_string())];
         }
         if flags.parts {
             extend_names!("Parts", self.parts);
