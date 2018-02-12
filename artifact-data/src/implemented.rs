@@ -20,7 +20,7 @@
 //! locations where artifacts are implemented in source code.
 #![allow(dead_code)]
 
-use ordermap::Entry;
+use ordermap::map::Entry;
 
 use dev_prelude::*;
 use name::{Name, SubName};

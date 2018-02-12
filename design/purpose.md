@@ -63,12 +63,12 @@ The following are the general rules:
 - Names that are very litle or not complete will be `red`.
 - Names that are in ERROR will be `bold red`.
 
-For completed, the levels are:
+For [[.color_spc]], the levels are:
 - `(100%,    70%,    40%,  0%)`: percentage spc
 - `(   3,      2,      1,   0)`: points
 - `(blue, yellow, yellow, red)`: colors
 
-For tested, the levels are:
+For [[.color_tst]], the levels are:
 - `(100%,    50%,  0%)`: percentage tst
 - `(   2,      1,   0)`: points
 - `(blue, yellow, red)`: colors for tst

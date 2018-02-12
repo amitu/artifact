@@ -1,6 +1,6 @@
 use dev_prelude::*;
-use artifact_data::{self, Artifact, Completed};
-use termstyle::{self, El, Text};
+use artifact_data::*;
+use termstyle::{self, El, Text, Color};
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ls", about = "List and filter artifacts")]
@@ -102,7 +102,7 @@ pub fn run(cmd: Ls) -> Result<i32> {
     let work_dir = work_dir!(cmd);
     info!("Running art-ls in working directory {}", work_dir.display());
 
-    let (mut lints, project) = artifact_data::read_project(work_dir)?;
+    let (mut lints, project) = read_project(work_dir)?;
     Ok(0)
 }
 
@@ -213,34 +213,85 @@ impl Flags {
 }
 
 trait ArtifactExt {
-    fn line_style(&self, flags: &Flags, plain: bool) -> Vec<El>;
+    fn line_style(&self, flags: &Flags, plain: bool) -> Vec<Vec<Text>>;
+    fn name_style(&self) -> Text;
+}
+
+impl ArtifactExt for Artifact {
+    fn line_style(&self, flags: &Flags, plain: bool) -> Vec<Vec<Text>> {
+        // first col: spc+tst
+        let mut out = vec![
+            vec![
+                self.completed.spc_style(),
+                Text::new(" ".into()),
+                self.completed.tst_style(),
+            ],
+        ];
+
+        if flags.name {
+            out.push(vec![self.name_style()])
+        }
+
+        out
+    }
+
+    fn name_style(&self) -> Text {
+        Text::new(self.name.as_str().into())
+    }
 }
 
 trait CompletedExt {
     fn spc_style(&self) -> Text;
+    fn spc_points(&self) -> u8;
     fn tst_style(&self) -> Text;
+    fn tst_points(&self) -> u8;
 }
 
 impl CompletedExt for Completed {
     fn spc_style(&self) -> Text {
-        let mut f = format!("{: >5.*}", 1, self.spc * 100.0);
-        Text::new(f)
+        let color = match self.spc_points() {
+            0 => Color::Red,
+            1 | 2 => Color::Yellow,
+            3 => Color::Green,
+            _ => unreachable!(),
+        };
+        Text::new(format!("{:.1}", self.spc * 100.0))
+            .color(color)
+    }
+
+    fn spc_points(&self) -> u8 {
+        if self.spc >= 1.0 {
+            3
+        } else if self.spc >= 0.7 {
+            2
+        } else if self.spc >= 0.4 {
+            1
+        } else {
+            0
+        }
     }
 
     fn tst_style(&self) -> Text {
-        let mut f = format!("{: >5.*}", 1, self.tst * 100.0);
-        Text::new(f)
+        let color = match self.tst_points() {
+            0 => Color::Red,
+            1 => Color::Yellow,
+            2 => Color::Green,
+            _ => unreachable!(),
+        };
+        Text::new(format!("{:.1}", self.tst * 100.0))
+            .color(color)
+    }
+
+    fn tst_points(&self) -> u8 {
+        if self.tst >= 1.0 {
+            2
+        } else if self.tst >= 0.5 {
+            1
+        } else {
+            0
+        }
     }
 }
-
-// impl ArtifactExt for Artifact {
-//     fn line_style(&self, flags: &Flags, plain: bool) -> Vec<El> {
-//         let mut out = Vec::new();
-//     }
-//
-//     fn completed_style(&self) -> Text {
-//     }
-// }
 
 #[test]
 fn test_flags_str() {
@@ -265,13 +316,17 @@ fn test_flags_str() {
 
 #[test]
 fn test_style() {
+    macro_rules! t { [$t:expr] => {{
+        Text::new($t.into())
+    }}}
+
     {
         let completed = Completed {
             spc: 0.33435234,
             tst: 1.0,
         };
-        assert_eq!(Text::new(" 33.4".into()), completed.spc_style());
-        assert_eq!(Text::new("100.0".into()), completed.tst_style());
+        assert_eq!(t!("33.4").color(Color::Red), completed.spc_style());
+        assert_eq!(t!("100.0").color(Color::Green), completed.tst_style());
     }
 
     {
@@ -279,7 +334,32 @@ fn test_style() {
             spc: 0.05,
             tst: 0.0,
         };
-        assert_eq!(Text::new("  5.0".into()), completed.spc_style());
-        assert_eq!(Text::new("  0.0".into()), completed.tst_style());
+        assert_eq!(t!("5.0").color(Color::Red), completed.spc_style());
+        assert_eq!(t!("0.0").color(Color::Red), completed.tst_style());
     }
+
+    let art = Artifact {
+        id: HashIm::default(),
+        name: name!("REQ-foo"),
+        file: PathArc::new("/fake"),
+        partof: orderset!{},
+        parts: orderset!{},
+        completed: Completed {
+            spc: 1.0,
+            tst: 0.003343,
+        },
+        text: "some text".into(),
+        impl_: Impl::NotImpl,
+        subnames: orderset!{},
+    };
+    let expected = vec![
+        vec![
+            t!("100.0").color(Color::Green),
+            t!(" "),
+            t!("0.3").color(Color::Red),
+        ],
+        vec![t!("REQ-foo")],
+    ];
+    let flags = Flags::default();
+    assert_eq!(expected, art.line_style(&flags, false));
 }
