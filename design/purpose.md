@@ -23,8 +23,14 @@ guidance for contributors and teamates.
 
 [artifact]: https://github.com/vitiral/artifact
 
+# SPC-cli
+partof: REQ-purpose
+###
 
-# SPC-ls
+The CLI (TODO: fill this out)
+
+
+# SPC-cli-ls
 The `art ls` command shall be used to list information about the artifacts in a
 project.
 
@@ -45,11 +51,8 @@ The args are as follows:
   should be searched.
 - `completed/tested`: flags which control what percentage completed/tested to
   display
-
-Additionaly, the following is defined:
-- [[SPC-cmd-ls-color]]: how the output is colorized
-- [[SPC-cmd-ls-display]]: display options (long, short, etc)
-- [[SPC-cmd-ls-pattern]]: more details on the pattern option.
+- [[.long]]: the `-l` flag prints the artifact in "long" form. Without it it
+  is printed in [[.table]] form.
 
 ## [[.color]]: Color
 In order to make viewing of information via cmdline easier, artifact **shall**

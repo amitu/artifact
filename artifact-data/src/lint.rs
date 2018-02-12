@@ -104,12 +104,12 @@ impl fmt::Display for Categorized {
         write!(
             f,
             "  ----- ERRORS -----:\n{}\n\n",
-            expect!(json::to_string(&self.error))
+            expect!(json::to_string_pretty(&self.error))
         )?;
         write!(
             f,
             "  ----- WARNINGS -----:\n{}\n",
-            expect!(json::to_string(&self.other))
+            expect!(json::to_string_pretty(&self.other))
         )
     }
 }

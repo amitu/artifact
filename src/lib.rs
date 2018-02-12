@@ -48,6 +48,7 @@ mod dev_prelude;
 
 mod ls;
 
+/// #SPC-cli
 pub fn run() -> Result<i32> {
     use quicli::prelude::structopt::clap::*;
     let app = App::new("art")

@@ -1,7 +1,14 @@
+//! #SPC-cli-ls
+use std::io;
+
 use dev_prelude::*;
 use artifact_data::*;
-use termstyle::{self, Color, El, Text};
+use termstyle::{self, Color, El, Table, Text};
 use termstyle::Color::*;
+
+macro_rules! t { [$t:expr] => {{
+    Text::new($t.into())
+}}}
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ls", about = "List and filter artifacts")]
@@ -13,7 +20,7 @@ pub struct Ls {
 
     #[structopt(name="PATTERN", help = "\
 Regular expression to search for artifact names.")]
-    pub pattern: String,
+    pub pattern: Option<String>,
 
     #[structopt(short="f", long="fields", value_name="FIELDS",
       default_value="name,parts",
@@ -25,7 +32,7 @@ Valid FIELDS are:
 - F/file: search the \"file\" field (see -F)
 - P/parts: search the \"parts\" field (see -P)
 - O/partof: search the \"partof\" field (see -O)
-- D/done: search the \"done\" field (see -D)
+- I/impl: search the \"impl\" field (see -I)
 - T/text: search the \"text\" field (see -T)
 
 Fields can be listed by all caps, or comma-separated lowercase.
@@ -74,9 +81,9 @@ Filter by tst (test) completeness. See `-s/--spc` for format.")]
 \"partof\" field: show the parents of the artifact.")]
     pub partof: bool,
 
-    #[structopt(short="D", long="done", help = "\
-\"done\" field: show the where the artifact is implemented.")]
-    pub done: bool,
+    #[structopt(short="I", long="impl", help = "\
+\"impl\" field: show the where the artifact is implemented.")]
+    pub impl_: bool,
 
     #[structopt(short="T", long="text", help = "\
 \"text\" field: show the text of the artifact")]
@@ -99,12 +106,63 @@ Type of output from [list, json]")]
 
 /// Run the `art ls` command
 pub fn run(cmd: Ls) -> Result<i32> {
+    let mut w = io::stdout();
+
     set_log_verbosity("art", cmd.verbosity)?;
     let work_dir = work_dir!(cmd);
     info!("Running art-ls in working directory {}", work_dir.display());
 
-    let (mut lints, project) = read_project(work_dir)?;
+    let (_, project) = read_project(work_dir)?;
+    let display_flags = Flags::from_cmd(&cmd);
+
+    if cmd.long {
+        for art in project.artifacts.values() {
+            for el in &art.full_style(&project.artifacts, &display_flags, cmd.plain) {
+                el.paint(&mut w)?;
+            }
+        }
+    } else {
+        display_table(&mut w, &project.artifacts, &display_flags, &cmd)?;
+    }
+
     Ok(0)
+}
+
+/// SPC-cli-ls.table
+fn display_table<W: IoWrite>(
+    w: &mut W,
+    artifacts: &OrderMap<Name, Artifact>,
+    display_flags: &Flags,
+    cmd: &Ls,
+) -> io::Result<()> {
+    let mut header = vec![vec![t!("spc%").bold()], vec![t!(" | tst%").bold()]];
+    if display_flags.name {
+        header.push(vec![t!(" | name").bold()]);
+    }
+    if display_flags.parts {
+        header.push(vec![t!(" | parts").bold()]);
+    }
+    if display_flags.partof {
+        header.push(vec![t!(" | partof").bold()]);
+    }
+    if display_flags.file {
+        header.push(vec![t!(" | file").bold()]);
+    }
+    if display_flags.impl_ {
+        header.push(vec![t!(" | impl").bold()]);
+    }
+    if display_flags.text {
+        header.push(vec![t!(" | text").bold()]);
+    }
+    let mut rows = Vec::with_capacity(artifacts.len() + 1);
+    rows.push(header);
+
+    rows.extend(
+        artifacts
+            .values()
+            .map(|art| art.line_style(artifacts, &display_flags, cmd.plain)),
+    );
+    El::Table(Table::new(rows)).paint(w)
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -113,14 +171,14 @@ struct Flags {
     file: bool,
     parts: bool,
     partof: bool,
-    done: bool,
+    impl_: bool,
     text: bool,
 }
 
 lazy_static!{
     pub static ref VALID_SEARCH_FIELDS: OrderSet<&'static str> = OrderSet::from_iter(
-        ["N", "F", "P", "O", "D", "T", "A",
-        "name", "file", "parts", "partof", "done", "text", "all"]
+        ["N", "F", "P", "O", "I", "T", "A",
+        "name", "file", "parts", "partof", "impl", "text", "all"]
         .iter().map(|s| *s));
 
     pub static ref ANY_UPPERCASE: Regex = Regex::new("[A-Z]").unwrap();
@@ -133,7 +191,7 @@ impl Default for Flags {
             file: false,
             parts: true,
             partof: false,
-            done: false,
+            impl_: false,
             text: false,
         }
     }
@@ -163,21 +221,34 @@ impl Flags {
             file: fc("F") || fc("file"),
             parts: fc("P") || fc("parts"),
             partof: fc("O") || fc("partof"),
-            done: fc("D") || fc("done"),
+            impl_: fc("I") || fc("impl"),
             text: fc("T") || fc("text"),
         };
         Ok(out.resolve_actual(all))
     }
 
     /// Get the given flags from the command
-    pub fn from_cmd(cmd: Ls) -> Flags {
+    pub fn from_cmd(cmd: &Ls) -> Flags {
         let out = Flags {
             name: cmd.name,
             file: cmd.file,
             parts: cmd.parts,
             partof: cmd.partof,
-            done: cmd.done,
+            impl_: cmd.impl_,
             text: cmd.text,
+        };
+        let out = if !cmd.all && cmd.long && out.len() == 0 {
+            // For the "long" form we display everything
+            Flags {
+                name: true,
+                file: true,
+                parts: true,
+                partof: true,
+                impl_: true,
+                text: true,
+            }
+        } else {
+            out
         };
         out.resolve_actual(cmd.all)
     }
@@ -209,7 +280,7 @@ impl Flags {
             self.file,
             self.parts,
             self.partof,
-            self.done,
+            self.impl_,
             self.text
         )
     }
@@ -221,21 +292,13 @@ impl Flags {
             file: !self.file,
             parts: !self.parts,
             partof: !self.partof,
-            done: !self.done,
+            impl_: !self.impl_,
             text: !self.text,
         }
     }
 }
 
 /// Faster `Text`
-macro_rules! t { [$t:expr] => {{
-    Text::new($t.into())
-}}}
-
-macro_rules! e { [$t:expr] => {{
-    El::new($e)
-}}}
-
 trait ArtifactExt {
     fn line_style(
         &self,
@@ -262,35 +325,33 @@ impl ArtifactExt for Artifact {
         plain: bool,
     ) -> Vec<Vec<Text>> {
         let mut out = Vec::with_capacity(flags.len() + 2);
-        macro_rules! push { [$item:expr] => {{
+        macro_rules! cell { [$item:expr] => {{
             let mut cell = $item;
-            cell.push(t!("|"));
+            cell.insert(0, t!(" | "));
             out.push(cell);
         }}};
 
         out.push(vec![self.completed.spc_style()]);
-        push!(vec![self.completed.tst_style()]);
+        cell!(vec![self.completed.tst_style()]);
 
         if flags.name {
-            push!(vec![self.name_style()])
+            cell!(vec![self.name_style()])
         }
         if flags.parts {
-            push!(lookup_name_styles(artifacts, &self.parts));
+            cell!(lookup_name_styles(artifacts, &self.parts));
         }
         if flags.partof {
-            push!(lookup_name_styles(artifacts, &self.partof));
+            cell!(lookup_name_styles(artifacts, &self.partof));
         }
         if flags.file {
-            push!(vec![t!(self.file.display().to_string())]);
+            cell!(vec![t!(self.file.display().to_string())]);
         }
-        if flags.done {
-            push!(vec![t!(self.impl_.to_string())]);
+        if flags.impl_ {
+            cell!(vec![t!(self.impl_.to_string())]);
         }
         if flags.text {
-            push!(vec![t!(truncate(&self.text, 30))]);
+            cell!(vec![t!(truncate(&self.text, 30))]);
         }
-        let last = out.len() - 1;
-        out[last].pop(); // remove last `|`
         out
     }
 
@@ -308,25 +369,27 @@ impl ArtifactExt for Artifact {
         }}}
 
         macro_rules! extend_names { [ $title:expr, $x:expr ] => {{
-            line![t!(concat!($title, ":\n")).bold()];
+            line![t!(concat!($title, ":")).bold()];
             for name in lookup_name_styles(artifacts, &$x) {
                 line![t!("- ").bold(), name];
             }
         }}}
 
         // Name and completion
-        line![t!("# ").bold(), self.name_style().bold(), t!("\n")];
+        line![t!("# ").bold(), self.name_style().bold()];
         line![
-            t!("Completed: spc=").bold(), self.completed.spc_style(),
-            t!("%  tst=").bold(), self.completed.tst_style(),
+            t!("Completed: spc=").bold(),
+            self.completed.spc_style(),
+            t!("%  tst=").bold(),
+            self.completed.tst_style(),
             t!("%").bold()
         ];
 
         if flags.file {
             line![t!("File: ").bold(), t!(self.file.display().to_string())];
         }
-        if flags.done {
-            line![t!("Done: ").bold(), t!(self.impl_.to_string())];
+        if flags.impl_ {
+            line![t!("Implemented: ").bold(), t!(self.impl_.to_string())];
         }
         if flags.parts {
             extend_names!("Parts", self.parts);
@@ -384,7 +447,7 @@ trait CompletedExt {
 }
 
 impl CompletedExt for Completed {
-    /// #SPC-ls.color_spc
+    /// #SPC-cli-ls.color_spc
     fn spc_style(&self) -> Text {
         let color = match self.spc_points() {
             0 => Red,
@@ -408,7 +471,7 @@ impl CompletedExt for Completed {
         }
     }
 
-    /// #SPC-ls.color_spc
+    /// #SPC-cli-ls.color_tst
     fn tst_style(&self) -> Text {
         let color = match self.tst_points() {
             0 => Red,
@@ -429,7 +492,7 @@ impl CompletedExt for Completed {
         }
     }
 
-    /// #SPC-ls.color_name
+    /// #SPC-cli-ls.color_name
     fn name_color(&self) -> Color {
         match self.spc_points() + self.tst_points() {
             0 => Red,

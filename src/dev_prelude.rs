@@ -9,7 +9,7 @@ pub use ordermap::*;
 #[macro_export]
 macro_rules! work_dir { [$cmd:expr] => {{
     match $cmd.work_dir {
-        Some(d) => PathDir::new(d),
+        Some(ref d) => PathDir::new(d),
         None => PathDir::current_dir(),
     }?
 }}}
