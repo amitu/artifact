@@ -1,3 +1,19 @@
+/* artifact: the requirements tracking tool made for developers
+ * Copyright (C) 2018  Garrett Berg <@vitiral, vitiral@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Lesser GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the Lesser GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
 //! #SPC-cli-ls
 use std::io;
 
@@ -14,12 +30,16 @@ macro_rules! t { [$t:expr] => {{
 #[structopt(name = "ls", about = "List and filter artifacts")]
 #[cfg_attr(rustfmt, rustfmt_skip)]
 pub struct Ls {
-    /// Pass many times for more log output.
     #[structopt(long = "verbose", short = "v")]
+    /// Pass many times for more log output.
     pub verbosity: u64,
 
-    #[structopt(name="PATTERN", help = "\
-Regular expression to search for artifact names.")]
+    #[structopt(long="work-dir")]
+    /// Use a different working directory [default: $CWD]
+    pub work_dir: Option<String>,
+
+    #[structopt(name="PATTERN")]
+    /// Regular expression to search for artifact names.")]
     pub pattern: Option<String>,
 
     #[structopt(short="f", long="fields", value_name="FIELDS",
@@ -48,9 +68,9 @@ identical to perl/python with a few minor differences
 https://doc.rust-lang.org/regex/regex/index.html#syntax.\n\n    ")]
     pub fields: String,
 
-    #[structopt(short="l", long="long", help = "Print items in the 'long form'")]
+    #[structopt(short="l", long="long")]
+    /// Print items in the 'long form'
     pub long: bool,
-
 
     #[structopt(short="s", long="spc", default_value=">0", help = "\
 Filter by spc (specification) completeness
@@ -60,47 +80,45 @@ Filter by spc (specification) completeness
 - `-s \">\"`  : show only items with spc >=100%\n\n    ")]
     pub spc: String,
 
-    #[structopt(short="t", long="tst", default_value=">0", help = "\
-Filter by tst (test) completeness. See `-s/--spc` for format.")]
+    #[structopt(short="t", long="tst", default_value=">0")]
+    /// Filter by tst (test) completeness. See `-s/--spc` for format.
     pub tst: String,
 
-    #[structopt(short="N", long="name", help = "\
-\"name\" field: show the name of the artifact.")]
+    #[structopt(short="N", long="name")]
+    /// \"name\" field: show the name of the artifact.
     pub name: bool,
 
-    #[structopt(short="F", long="file", help = "\
-\"file\" field: show the file where the artifact is defined.")]
+    #[structopt(short="F", long="file")]
+    /// \"file\" field: show the file where the artifact is defined.
     pub file: bool,
 
-    #[structopt(short="P", long="parts", help = "\
-\"parts\" field: show the children of the artifact.")]
+    #[structopt(short="P", long="parts")]
+    /// \"parts\" field: show the children of the artifact.
     pub parts: bool,
 
-    #[structopt(short="O", long="partof", help = "\
-\"partof\" field: show the parents of the artifact.")]
+    #[structopt(short="O", long="partof")]
+    /// \"partof\" field: show the parents of the artifact.
     pub partof: bool,
 
-    #[structopt(short="I", long="impl", help = "\
-\"impl\" field: show the where the artifact is implemented.")]
+    #[structopt(short="I", long="impl")]
+    /// \"impl\" field: show the where the artifact is implemented.
     pub impl_: bool,
 
-    #[structopt(short="T", long="text", help = "\
-\"text\" field: show the text of the artifact")]
+    #[structopt(short="T", long="text")]
+    /// \"text\" field: show the text of the artifact.
     pub text: bool,
 
-    #[structopt(short="A", long="all", help = "\
-\"all\" field: activate ALL fields, additional fields DEACTIVATE fields")]
+    #[structopt(short="A", long="all")]
+    /// \"all\" field: activate ALL fields, additional fields DEACTIVATE fields.
     pub all: bool,
 
-    #[structopt(long="plain", help = "Do not display color in the output.")]
+    #[structopt(long="plain")]
+    /// Do not display color in the output.
     pub plain: bool,
 
-    #[structopt(long="type", default_value="list", help = "\
-Type of output from [list, json]")]
+    #[structopt(long="type", default_value="list")]
+    /// Type of output from [list, json]
     pub output_ty: String,
-
-    #[structopt(long="work-dir", help = "Use a different working directory [default: $CWD]")]
-    pub work_dir: Option<String>,
 }
 
 /// Run the `art ls` command

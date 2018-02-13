@@ -46,6 +46,7 @@ use quicli::prelude::*;
 #[macro_use]
 mod dev_prelude;
 
+mod init;
 mod ls;
 
 /// #SPC-cli
@@ -55,12 +56,14 @@ pub fn run() -> Result<i32> {
         .author("vitiral")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Design documentation tool for everybody.")
-        .subcommand(ls::Ls::clap());
+        .subcommand(ls::Ls::clap())
+        .subcommand(init::Init::clap());
 
     let matches = app.get_matches();
 
     match matches.subcommand() {
         ("ls", Some(args)) => ls::run(ls::Ls::from_clap(args.clone())),
+        ("init", Some(args)) => init::run(init::Init::from_clap(args.clone())),
         (sub, _) => unimplemented!("sub: {}", sub),
     }
 }
