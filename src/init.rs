@@ -39,7 +39,7 @@ const INIT_PURPOSE_MD: &str = include_str!("data/purpose.md");
 
 
 pub fn run(cmd: Init) -> Result<i32> {
-    set_log_verbosity("art", cmd.verbosity)?;
+    set_log_verbosity!(cmd);
     let work_dir = work_dir!(cmd);
     info!("Running art-init in working directory {}", work_dir.display());
 

@@ -125,7 +125,7 @@ Filter by spc (specification) completeness
 pub fn run(cmd: Ls) -> Result<i32> {
     let mut w = io::stdout();
 
-    set_log_verbosity("art", cmd.verbosity)?;
+    set_log_verbosity!(cmd);
     let work_dir = work_dir!(cmd);
     info!("Running art-ls in working directory {}", work_dir.display());
 
