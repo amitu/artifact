@@ -126,8 +126,8 @@ pub fn run(cmd: Ls) -> Result<i32> {
     let mut w = io::stdout();
 
     set_log_verbosity!(cmd);
-    let work_dir = work_dir!(cmd);
-    info!("Running art-ls in working directory {}", work_dir.display());
+    let work_dir = find_repo(&work_dir!(cmd))?;
+    info!("Running art-ls in repo {}", work_dir.display());
 
     let (_, project) = read_project(work_dir)?;
     let display_flags = Flags::from_cmd(&cmd);
@@ -610,11 +610,10 @@ fn test_flags_str() {
     macro_rules! from_str { ($f:expr) => {{
         expect!(Flags::from_str($f))
     }}}
-    assert_eq!(flags, from_str!(""));
     assert_eq!(flags, from_str!("NP"));
     assert_eq!(flags, from_str!("N,parts"));
     assert_eq!(flags, from_str!("name,parts"));
-    assert_eq!(flags, from_str!("AFOCT"));
+    assert_eq!(flags, from_str!("AFOIT"));
     flags.text = true;
     assert_eq!(flags, from_str!("NTP"));
     assert_eq!(flags, from_str!("TNP"));
@@ -623,6 +622,8 @@ fn test_flags_str() {
     flags.text = false;
     assert_eq!(flags, from_str!("N"));
     assert_eq!(flags, from_str!("name"));
+
+    assert!(Flags::from_str("").is_err());
 }
 
 #[test]
@@ -666,11 +667,11 @@ fn test_style() {
     let expected = vec![
         // % spc+tst completed
         vec![t!("100.0").color(Green)],
-        vec![t!("0.3").color(Red), t!("|")],
+        vec![t!("0.3").color(Red)],
         // name
-        vec![t!("REQ-foo").color(Blue), t!("|")],
+        vec![t!(" | "), t!("REQ-foo").color(Blue)],
         // parts
-        vec![],
+        vec![t!(" | ")],
     ];
     let flags = Flags::default();
     assert_eq!(expected, art.line_style(&artifacts, &flags));

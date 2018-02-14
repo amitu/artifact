@@ -1,3 +1,19 @@
+/* artifact: the requirements tracking tool made for developers
+ * Copyright (C) 2018  Garrett Berg <@vitiral, vitiral@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Lesser GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the Lesser GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
 pub use expect_macro::*;
 
 #[allow(unused_imports)]
@@ -5,6 +21,7 @@ pub use ergo::*;
 #[allow(unused_imports)]
 pub use quicli::prelude::*;
 pub use ordermap::*;
+pub use artifact_data::ART_DIR;
 
 #[macro_export]
 macro_rules! work_dir { [$cmd:expr] => {{
@@ -44,4 +61,18 @@ pub fn set_log_verbosity(pkg: &str, verbosity: u64) -> Result<()> {
         .filter(None, LogLevel::Warn.to_level_filter())
         .try_init()?;
     Ok(())
+}
+
+/// Find the project repo directory.
+pub fn find_repo(initial: &PathDir) -> Result<PathDir> {
+    let mut dir = initial.clone();
+    loop {
+        if dir.join(ART_DIR).exists() {
+            return Ok(dir);
+        }
+        dir = match dir.parent_dir() {
+            Some(d) => d,
+            None => bail!("{} not within a directory with `.art`", initial.display()),
+        };
+    }
 }

@@ -51,3 +51,4 @@ default-features = false
 
 [dev-dependencies]
 assert_cli = "0.5.4"
+# pretty_assertions = "0.5.0"
