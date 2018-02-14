@@ -1,7 +1,8 @@
 artifact_paths = ["{repo}/design"]
 exclude_artifact_paths = []
 code_paths = [
-    "{repo}/src",
+    "/src",
+    "target/fakecode",
     # "{repo}/design",
     # "{repo}/web-ui/src",
     # "{repo}/web-ui/tests",

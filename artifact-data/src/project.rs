@@ -65,17 +65,9 @@ impl Project {
     /// TODO WARN:
     /// - references in text that do not exist
     /// - (optional?) poorly formed references in text
-    pub fn lint(&self) -> lint::Categorized {
-        let (send, recv) = ch::unbounded();
-
+    pub fn lint(&self, send: &Sender<lint::Lint>) {
         self.lint_errors(&send);
         self.lint_other(&send);
-
-        drop(send);
-        let mut lints = lint::Categorized::default();
-        lints.categorize(recv.into_iter());
-        lints.sort();
-        lints
     }
 
     /// Lint against only "fatal" errors.
@@ -199,6 +191,13 @@ pub fn read_project<P: AsRef<Path>>(
         artifacts: artifacts,
     };
 
+    let recv = {
+        let (send, recv) = ch::unbounded();
+        project.lint(&send);
+        recv
+    };
+
+    lints.categorize(recv.iter());
     lints.sort();
     project.sort();
 

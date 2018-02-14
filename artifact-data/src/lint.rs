@@ -91,6 +91,11 @@ impl Categorized {
         self.other.sort();
         self.other.dedup();
     }
+
+    /// Return whether there are _any_ lints.
+    pub fn is_empty(&self) -> bool {
+        self.error.is_empty() && self.other.is_empty()
+    }
 }
 
 impl error::Error for Categorized {

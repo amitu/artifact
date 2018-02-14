@@ -126,10 +126,10 @@ pub fn run(cmd: Ls) -> Result<i32> {
     let mut w = io::stdout();
 
     set_log_verbosity!(cmd);
-    let work_dir = find_repo(&work_dir!(cmd))?;
-    info!("Running art-ls in repo {}", work_dir.display());
+    let repo = find_repo(&work_dir!(cmd))?;
+    info!("Running art-ls in repo {}", repo.display());
 
-    let (_, project) = read_project(work_dir)?;
+    let (_, project) = read_project(repo)?;
     let display_flags = Flags::from_cmd(&cmd);
     let mut filtered = filter_artifacts(&cmd, &project.artifacts)?;
     filtered.sort();

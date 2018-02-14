@@ -456,6 +456,8 @@ fn save_project(lints: &mut lint::Categorized, project: &Project) {
                     }
 
                     let file = handle_err!(PathFile::create(&path));
+                    let mut arts: OrderMap<Name, raw::ArtifactRaw> = arts;
+                    arts.sort_keys();
                     let text = match raw::ArtFileType::from_path(&file) {
                         Some(raw::ArtFileType::Toml) => expect!(toml::to_string(&arts)),
                         Some(raw::ArtFileType::Md) => raw::to_markdown(&arts),

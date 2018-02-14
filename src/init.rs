@@ -38,6 +38,7 @@ const INIT_SETTINGS_TOML: &str = include_str!("data/settings.toml");
 const INIT_PURPOSE_MD: &str = include_str!("data/purpose.md");
 
 
+/// SPC-cli.init
 pub fn run(cmd: Init) -> Result<i32> {
     set_log_verbosity!(cmd);
     let work_dir = work_dir!(cmd);
