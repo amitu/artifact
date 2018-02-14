@@ -29,6 +29,7 @@ macro_rules! t { [$t:expr] => {{
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ls", about = "List and filter artifacts")]
 #[cfg_attr(rustfmt, rustfmt_skip)]
+// #SPC-cli-ls.args
 pub struct Ls {
     #[structopt(long = "verbose", short = "v")]
     /// Pass many times for more log output.
@@ -92,6 +93,10 @@ Filter by spc (specification) completeness
     /// \"file\" field: show the file where the artifact is defined.
     pub file: bool,
 
+    #[structopt(short="S", long="subnames")]
+    /// \"subnames\" field: show the subnames of the artifact.
+    pub subnames: bool,
+
     #[structopt(short="P", long="parts")]
     /// \"parts\" field: show the children of the artifact.
     pub parts: bool,
@@ -137,7 +142,7 @@ pub fn run(cmd: Ls) -> Result<i32> {
     let ty_ = OutputType::from_str(&cmd.output_ty)?;
     if ty_ == OutputType::Json {
         let artifacts: Vec<_> = filtered.iter().map(|n| project.artifacts.get(n)).collect();
-        write!(w, "{}", expect!(json::to_string_pretty(&artifacts)));
+        write!(w, "{}", expect!(json::to_string_pretty(&artifacts)))?;
         return Ok(0);
     }
 
@@ -219,6 +224,9 @@ fn display_table<W: IoWrite>(
     if display_flags.name {
         header.push(vec![t!(" | name").bold()]);
     }
+    if display_flags.subnames {
+        header.push(vec![t!(" | subnames").bold()]);
+    }
     if display_flags.parts {
         header.push(vec![t!(" | parts").bold()]);
     }
@@ -269,6 +277,7 @@ impl OutputType {
 struct Flags {
     name: bool,
     file: bool,
+    subnames: bool,
     parts: bool,
     partof: bool,
     impl_: bool,
@@ -277,13 +286,12 @@ struct Flags {
 
 lazy_static!{
     pub static ref VALID_SEARCH_FIELDS: OrderSet<&'static str> = OrderSet::from_iter(
-        ["N", "F", "P", "O", "I", "T", "A",
-        "name", "file", "parts", "partof", "impl", "text", "all"]
+        ["N", "F", "S", "P", "O", "I", "T", "A",
+        "name", "file", "subnames", "parts", "partof", "impl", "text", "all"]
         .iter().map(|s| *s));
 
     pub static ref ANY_UPPERCASE: Regex = Regex::new("[A-Z]").unwrap();
 }
-
 
 impl Default for Flags {
     fn default() -> Flags {
@@ -299,12 +307,12 @@ impl Flags {
         Flags {
             name: false,
             file: false,
+            subnames: false,
             parts: false,
             partof: false,
             impl_: false,
             text: false,
         }
-
     }
 
     pub fn from_str<'a>(s: &'a str) -> Result<Flags> {
@@ -325,6 +333,7 @@ impl Flags {
         let out = Flags {
             name: fc("N") || fc("name"),
             file: fc("F") || fc("file"),
+            subnames: fc("S") || fc("subnames"),
             parts: fc("P") || fc("parts"),
             partof: fc("O") || fc("partof"),
             impl_: fc("I") || fc("impl"),
@@ -338,6 +347,7 @@ impl Flags {
         let out = Flags {
             name: cmd.name,
             file: cmd.file,
+            subnames: cmd.subnames,
             parts: cmd.parts,
             partof: cmd.partof,
             impl_: cmd.impl_,
@@ -348,6 +358,7 @@ impl Flags {
             Flags {
                 name: true,
                 file: true,
+                subnames: true,
                 parts: true,
                 partof: true,
                 impl_: true,
@@ -382,6 +393,7 @@ impl Flags {
         add!(
             self.name,
             self.file,
+            self.subnames,
             self.parts,
             self.partof,
             self.impl_,
@@ -394,6 +406,7 @@ impl Flags {
         Flags {
             name: !self.name,
             file: !self.file,
+            subnames: !self.subnames,
             parts: !self.parts,
             partof: !self.partof,
             impl_: !self.impl_,
@@ -404,27 +417,17 @@ impl Flags {
 
 /// Faster `Text`
 trait ArtifactExt {
-    fn line_style(
-        &self,
-        artifacts: &OrderMap<Name, Artifact>,
-        flags: &Flags,
-    ) -> Vec<Vec<Text>>;
+    fn line_style(&self, artifacts: &OrderMap<Name, Artifact>, flags: &Flags) -> Vec<Vec<Text>>;
 
-    fn full_style(
-        &self,
-        artifacts: &OrderMap<Name, Artifact>,
-        flags: &Flags,
-    ) -> Vec<El>;
+    fn full_style(&self, artifacts: &OrderMap<Name, Artifact>, flags: &Flags) -> Vec<El>;
 
     fn name_style(&self) -> Text;
+
+    fn subname_style(&self, subname: &SubName) -> Text;
 }
 
 impl ArtifactExt for Artifact {
-    fn line_style(
-        &self,
-        artifacts: &OrderMap<Name, Artifact>,
-        flags: &Flags,
-    ) -> Vec<Vec<Text>> {
+    fn line_style(&self, artifacts: &OrderMap<Name, Artifact>, flags: &Flags) -> Vec<Vec<Text>> {
         let mut out = Vec::with_capacity(flags.len() + 2);
         macro_rules! cell { [$item:expr] => {{
             let mut cell = $item;
@@ -437,6 +440,17 @@ impl ArtifactExt for Artifact {
 
         if flags.name {
             cell!(vec![self.name_style()])
+        }
+        if flags.subnames {
+            let mut styles = Vec::new();
+            for s in self.subnames.iter() {
+                styles.push(self.subname_style(s));
+                styles.push(t!(", "));
+            }
+            if !styles.is_empty() {
+                styles.pop(); // remove trailing comma
+            }
+            cell!(styles);
         }
         if flags.parts {
             cell!(lookup_name_styles(artifacts, &self.parts));
@@ -456,11 +470,7 @@ impl ArtifactExt for Artifact {
         out
     }
 
-    fn full_style(
-        &self,
-        artifacts: &OrderMap<Name, Artifact>,
-        flags: &Flags,
-    ) -> Vec<El> {
+    fn full_style(&self, artifacts: &OrderMap<Name, Artifact>, flags: &Flags) -> Vec<El> {
         let mut out = Vec::new();
 
         macro_rules! line { [ $( $x:expr ),* ] => {{
@@ -508,6 +518,21 @@ impl ArtifactExt for Artifact {
 
     fn name_style(&self) -> Text {
         t!(self.name.as_str()).color(self.completed.name_color())
+    }
+
+    fn subname_style(&self, sub: &SubName) -> Text {
+        let color = match self.impl_ {
+            Impl::Done(_) => Red,
+            Impl::Code(ref code) => {
+                if code.secondary.contains_key(sub) {
+                    Green
+                } else {
+                    Red
+                }
+            }
+            Impl::NotImpl => Red,
+        };
+        t!(sub.as_str()).color(color)
     }
 }
 

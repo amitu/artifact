@@ -27,11 +27,11 @@ pub struct Fmt {
     /// Pass many times for more log output.
     pub verbosity: u64,
 
-    #[structopt(long="work-dir")]
+    #[structopt(long = "work-dir")]
     /// Use a different working directory [default: $CWD]
     pub work_dir: Option<String>,
 
-    #[structopt(long="type")]
+    #[structopt(long = "type")]
     /// Set the type of all files
     pub ty_: Option<String>,
 }

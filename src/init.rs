@@ -27,7 +27,7 @@ pub struct Init {
     /// Pass many times for more log output.
     pub verbosity: u64,
 
-    #[structopt(long="work-dir")]
+    #[structopt(long = "work-dir")]
     /// Use a different working directory [default: $CWD]
     pub work_dir: Option<String>,
 }
@@ -37,15 +37,22 @@ const PURPOSE_MD: &str = "purpose.md";
 const INIT_SETTINGS_TOML: &str = include_str!("data/settings.toml");
 const INIT_PURPOSE_MD: &str = include_str!("data/purpose.md");
 
-
 /// SPC-cli.init
 pub fn run(cmd: Init) -> Result<i32> {
     set_log_verbosity!(cmd);
     let work_dir = work_dir!(cmd);
-    info!("Running art-init in working directory {}", work_dir.display());
+    info!(
+        "Running art-init in working directory {}",
+        work_dir.display()
+    );
 
     let art = work_dir.join(ART_DIR);
-    ensure!(!art.exists(), "{} directory already exists at {}", ART_DIR, work_dir.display());
+    ensure!(
+        !art.exists(),
+        "{} directory already exists at {}",
+        ART_DIR,
+        work_dir.display()
+    );
     let art = PathDir::create(art)?;
     let settings = PathFile::create(art.join(SETTINGS_FILE))?;
     println!("Created settings file at: {}", settings.display());
@@ -54,6 +61,9 @@ pub fn run(cmd: Init) -> Result<i32> {
     let purpose = PathFile::create(design.join(PURPOSE_MD))?;
     println!("Created initial purpose at: {}", purpose.display());
     purpose.write_str(INIT_PURPOSE_MD)?;
-    println!("Successfully initialized artifact project: {}", work_dir.display());
+    println!(
+        "Successfully initialized artifact project: {}",
+        work_dir.display()
+    );
     Ok(0)
 }

@@ -27,7 +27,7 @@ pub struct Check {
     /// Pass many times for more log output.
     pub verbosity: u64,
 
-    #[structopt(long="work-dir")]
+    #[structopt(long = "work-dir")]
     /// Use a different working directory [default: $CWD]
     pub work_dir: Option<String>,
 }
