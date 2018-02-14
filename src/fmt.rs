@@ -14,15 +14,15 @@
  * You should have received a copy of the Lesser GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
-//! Check for errors
+//! Format the project
 
 use dev_prelude::*;
 use artifact_data::*;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "check")]
-/// Check your project for errors and warnings.
-pub struct Check {
+#[structopt(name = "fmt")]
+/// Format the project and change the filetype.
+pub struct Fmt {
     #[structopt(long = "verbose", short = "v")]
     /// Pass many times for more log output.
     pub verbosity: u64,
@@ -30,20 +30,17 @@ pub struct Check {
     #[structopt(long="work-dir")]
     /// Use a different working directory [default: $CWD]
     pub work_dir: Option<String>,
+
+    #[structopt(long="type")]
+    /// Set the type of all files
+    pub ty_: Option<String>,
 }
 
-/// #SPC-cli.check
-pub fn run(cmd: Check) -> Result<i32> {
+/// #SPC-cli.fmt
+pub fn run(cmd: Fmt) -> Result<i32> {
     set_log_verbosity!(cmd);
     let repo = find_repo(&work_dir!(cmd))?;
-    info!("Running art-check in repo {}", repo.display());
-    let (lints, _) = read_project(repo)?;
-    if !lints.error.is_empty() {
-        Err(lints.into())
-    } else if !lints.is_empty() {
-        eprintln!("{}", lints);
-        Ok(2) // rc=2 if only warnings
-    } else {
-        Ok(0)
-    }
+    info!("Running art-fmt in repo {}", repo.display());
+    modify_project(&repo, Vec::new())?;
+    Ok(0)
 }

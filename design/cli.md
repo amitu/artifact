@@ -73,4 +73,3 @@ For [[.color_name]] you add the two points together:
 - 3-4: name is blue
 - 1-2: name is yellow
 - 0: name is red
-

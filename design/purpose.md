@@ -22,4 +22,3 @@ it possible for them to use their design docs to provide documentation and
 guidance for contributors and teamates.
 
 [artifact]: https://github.com/vitiral/artifact
-

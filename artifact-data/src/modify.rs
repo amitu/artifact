@@ -16,6 +16,9 @@
  * */
 //! #SPC-modify
 
+use std::error;
+use std::fmt;
+
 use dev_prelude::*;
 use artifact;
 use intermediate::{ArtifactIm, HashIm};
@@ -25,7 +28,7 @@ use project::{read_project, Project};
 use raw;
 use settings;
 
-static ART_BK_EXT: &str = ".artbk";
+static ART_BK_EXT: &str = "artbk";
 
 #[derive(Debug, Serialize, Deserialize)]
 /// #SPC-structs.artifact_op
@@ -92,6 +95,19 @@ impl ArtifactOp {
 pub struct ModifyError {
     pub lints: lint::Categorized,
     pub kind: ModifyErrorKind,
+}
+
+impl error::Error for ModifyError {
+    fn description(&self) -> &str {
+        "error while modifying an artifact project"
+    }
+}
+
+impl fmt::Display for ModifyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ModifyErrorKind: {:?}\n", self.kind)?;
+        write!(f, "{}", self.lints)
+    }
 }
 
 #[derive(Debug)]

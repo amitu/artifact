@@ -51,6 +51,7 @@ use quicli::prelude::*;
 mod dev_prelude;
 
 mod check;
+mod fmt;
 mod init;
 mod ls;
 
@@ -63,6 +64,7 @@ pub fn run() -> Result<i32> {
         .about("Design documentation tool for everybody.")
         .subcommand(init::Init::clap())
         .subcommand(check::Check::clap())
+        .subcommand(fmt::Fmt::clap())
         .subcommand(ls::Ls::clap());
 
     let matches = app.get_matches();
@@ -71,6 +73,7 @@ pub fn run() -> Result<i32> {
         ("ls", Some(args)) => ls::run(ls::Ls::from_clap(args.clone())),
         ("init", Some(args)) => init::run(init::Init::from_clap(args.clone())),
         ("check", Some(args)) => check::run(check::Check::from_clap(args.clone())),
+        ("fmt", Some(args)) => fmt::run(fmt::Fmt::from_clap(args.clone())),
         (sub, _) => unimplemented!("sub: {}", sub),
     }
 }
