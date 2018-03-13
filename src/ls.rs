@@ -638,7 +638,7 @@ fn test_flags_str() {
     assert_eq!(flags, from_str!("NP"));
     assert_eq!(flags, from_str!("N,parts"));
     assert_eq!(flags, from_str!("name,parts"));
-    assert_eq!(flags, from_str!("AFOIT"));
+    assert_eq!(flags, from_str!("AFOITS"));
     flags.text = true;
     assert_eq!(flags, from_str!("NTP"));
     assert_eq!(flags, from_str!("TNP"));
