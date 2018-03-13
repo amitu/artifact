@@ -70,10 +70,10 @@ pub fn run() -> Result<i32> {
     let matches = app.get_matches();
 
     match matches.subcommand() {
-        ("ls", Some(args)) => ls::run(ls::Ls::from_clap(args.clone())),
-        ("init", Some(args)) => init::run(init::Init::from_clap(args.clone())),
-        ("check", Some(args)) => check::run(check::Check::from_clap(args.clone())),
-        ("fmt", Some(args)) => fmt::run(fmt::Fmt::from_clap(args.clone())),
+        ("ls", Some(args)) => ls::run(ls::Ls::from_clap(&args)),
+        ("init", Some(args)) => init::run(init::Init::from_clap(&args)),
+        ("check", Some(args)) => check::run(check::Check::from_clap(&args)),
+        ("fmt", Some(args)) => fmt::run(fmt::Fmt::from_clap(&args)),
         (sub, _) => unimplemented!("sub: {}", sub),
     }
 }

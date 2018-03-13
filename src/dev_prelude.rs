@@ -56,7 +56,7 @@ pub fn set_log_verbosity(pkg: &str, verbosity: u64) -> Result<()> {
         _ => LogLevel::Trace,
     }.to_level_filter();
 
-    LoggerBuiler::new()
+    LoggerBuilder::new()
         .filter(Some(pkg), log_level)
         .filter(None, LogLevel::Warn.to_level_filter())
         .try_init()?;
