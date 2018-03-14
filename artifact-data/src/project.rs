@@ -26,9 +26,9 @@ use name::{Name, SubName};
 use raw;
 use settings;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct Project {
-    pub paths: Arc<settings::ProjectPaths>,
+    pub paths: settings::ProjectPaths,
     pub code_impls: OrderMap<Name, implemented::ImplCode>,
     pub artifacts: OrderMap<Name, artifact::Artifact>,
 }
@@ -105,7 +105,7 @@ pub fn read_project<P: AsRef<Path>>(
         paths.exclude_code_paths.sort();
         paths.artifact_paths.sort();
         paths.exclude_artifact_paths.sort();
-        Arc::new(paths)
+        paths
     };
 
     let (lint_handle, locs_handle, loaded_handle) = {

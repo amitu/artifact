@@ -352,7 +352,9 @@ fn perform_operations(
 }
 
 /// #SPC-modify.backup
-fn create_backups(lints: &mut lint::Categorized, paths: Arc<settings::ProjectPaths>) {
+fn create_backups(lints: &mut lint::Categorized, paths: settings::ProjectPaths) {
+    // TODO: figure out how to just use a reference
+    let paths = Arc::new(paths);
     let recv_lint = {
         let (send_lint, recv_lint) = ch::bounded(128);
         let (send_path, recv_path) = ch::bounded(128);
@@ -391,7 +393,9 @@ fn create_backups(lints: &mut lint::Categorized, paths: Arc<settings::ProjectPat
     lints.categorize(recv_lint.iter());
 }
 
-fn remove_backups(lints: &mut lint::Categorized, paths: Arc<settings::ProjectPaths>) {
+fn remove_backups(lints: &mut lint::Categorized, paths: settings::ProjectPaths) {
+    // TODO: figure out how to just use a reference
+    let paths = Arc::new(paths);
     let recv_lint = {
         let (send_lint, recv_lint) = ch::bounded(128);
         let (send_path, recv_path) = ch::bounded(128);

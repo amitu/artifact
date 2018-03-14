@@ -31,7 +31,7 @@ macro_rules! t { [$t:expr] => {{
 #[cfg_attr(rustfmt, rustfmt_skip)]
 // #SPC-cli-ls.args
 pub struct Ls {
-    #[structopt(long = "verbose", short = "v")]
+    #[structopt(long = "verbose", short = "v", default_value="0")]
     /// Pass many times for more log output.
     pub verbosity: u64,
 

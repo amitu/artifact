@@ -70,7 +70,7 @@ impl SettingsRaw {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 /// Paths that have have be recursively loaded.
 pub struct ProjectPaths {
     pub base: PathDir,

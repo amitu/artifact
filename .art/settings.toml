@@ -2,12 +2,13 @@ artifact_paths = ["{repo}/design"]
 exclude_artifact_paths = []
 code_paths = [
     "/src",
-    "target/fakecode",
+    # "target/fakecode",
     # "{repo}/design",
     # "{repo}/web-ui/src",
     # "{repo}/web-ui/tests",
     # "{repo}/web-ui/sel_tests",
 ]
 exclude_code_paths = [
+    "src/serve/data/web-ui.tar"
 ]
 file_type = "markdown"

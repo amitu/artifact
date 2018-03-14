@@ -36,7 +36,7 @@ unicode-width = "0.1.4"
 expect_macro = "0.2.0"
 ordermap = "0.4.0"
 nickel = "0.10.1"
-jsonrpc-core = "8.0.1"
+jsonrpc-core = "7.*"
 
 [dependencies.artifact-data]
 path = "artifact-data"
