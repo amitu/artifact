@@ -37,6 +37,9 @@ extern crate quicli;
 extern crate expect_macro;
 extern crate termstyle;
 
+extern crate nickel;
+extern crate jsonrpc_core;
+
 // #[macro_use]
 // #[cfg(test)]
 // extern crate pretty_assertions;
@@ -54,6 +57,7 @@ mod check;
 mod fmt;
 mod init;
 mod ls;
+mod serve;
 
 /// #SPC-cli
 pub fn run() -> Result<i32> {
