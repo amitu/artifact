@@ -41,25 +41,35 @@ type alias ProjectData =
     , uuid : String
     }
 
+type alias Completed =
+    { spc: Float
+    , tst: Float
+    }
 
 {-| representation of an Artifact object
 -}
 type alias Artifact =
     { id : ArtifactId
-    , revision : Int
     , name : Name
-    , def : String
+    , file : String
     , text : String
-    , subnames : List String
     , partof : List Name
     , parts : List Name
-    , code : Maybe FullLocs
-    , done : Maybe String
-    , completed : Float
-    , tested : Float
-    , edited : Maybe EditableArtifact
+    , completed : Completed
+    , text : String
+    , impl : Impl
+    , subnames : List String
     }
 
+type Impl
+    = Done String
+    | Code ImplCode
+    | NotImpl
+
+type alias ImplCode =
+    { primary: Maybe Loc
+    , secondary: Dict.Dict String Loc
+    }
 
 type alias FullLocs =
     { root : Maybe Loc
@@ -83,7 +93,7 @@ type alias Name =
 {-| pretty much only used when updating artifacts
 -}
 type alias ArtifactId =
-    Int
+    String
 
 
 {-| the type of the artifact name
