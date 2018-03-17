@@ -12,7 +12,7 @@ code_paths = [
 ]
 
 exclude_code_paths = [
-    "src/serve/data/web-ui.tar"
+    # "src/serve/data/web-ui.tar"
 ]
 
 file_type = "markdown"

@@ -19,7 +19,7 @@ lazy_static! {
     pub static ref RPC_HANDLER: IoHandler = init_rpc_handler();
 }
 
-const WEB_FRONTEND_TAR: &'static [u8] = include_bytes!("data/web-ui.tar");
+const WEB_FRONTEND_TAR: &'static [u8] = include_bytes!("../../web-ui/target/web-ui.tar");
 const REPLACE_FLAGS: &str = "{/* REPLACE WITH FLAGS */}";
 
 
