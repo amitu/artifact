@@ -24,6 +24,10 @@ artifactsUrl =
     "#artifacts"
 
 
+newId : String
+newId =
+    "new-artifact"
+
 
 -- TYPES
 
@@ -56,7 +60,6 @@ type alias Artifact =
     , partof : List Name
     , parts : List Name
     , completed : Completed
-    , text : String
     , impl : Impl
     , subnames : List String
     , edited: Maybe EditableArtifact
@@ -79,7 +82,7 @@ type alias FullLocs =
 
 
 type alias Loc =
-    { path : String
+    { file : String
     , line : Int
     }
 
@@ -452,7 +455,7 @@ type alias Columns =
     { parts : Bool
     , partof : Bool
     , text : Bool
-    , def : Bool
+    , file : Bool
     , loc : Bool
     }
 
@@ -462,7 +465,7 @@ initialColumns =
     { parts = True
     , partof = False
     , text = True
-    , def = False
+    , file = False
     , loc = False
     }
 

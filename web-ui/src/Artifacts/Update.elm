@@ -104,10 +104,10 @@ update msg model =
             case option of
                 ChangeChoice artifact edited ->
                     let
-                        -- update revision so that any warnings of prior
+                        -- update original_id so that any warnings of prior
                         -- change go away
                         e =
-                            { edited | revision = artifact.revision }
+                            { edited | original_id = artifact.id }
 
                         artifacts =
                             setEdited model.artifacts artifact (Just e)
@@ -240,7 +240,7 @@ handleReceived model artifactList =
 -}
 handleEditedReceived : Artifact -> Artifact -> Maybe EditableArtifact
 handleEditedReceived oldArt newArt =
-    if oldArt.revision == newArt.revision then
+    if oldArt.id == newArt.id then
         oldArt.edited
     else
         case oldArt.edited of
@@ -290,7 +290,7 @@ processNew model newArt =
                             Nothing
 
                 log =
-                    if oldArt.revision == newArt.revision then
+                    if oldArt.id == newArt.id then
                         Nothing
                     else
                         Just <| LogOk <| "Artifact Update Successful: " ++ newArt.name.raw

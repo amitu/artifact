@@ -313,14 +313,14 @@ implementedCodeRoot : Model -> Loc -> Html m
 implementedCodeRoot model root =
     let
         plain =
-            root.path ++ "[" ++ (toString root.line) ++ "]"
+            root.file ++ "[" ++ (toString root.line) ++ "]"
     in
         if model.flags.path_url == "" then
             text plain
         else
             let
                 url =
-                    Utils.strReplace "{path}" root.path model.flags.path_url
+                    Utils.strReplace "{path}" root.file model.flags.path_url
                         |> Utils.strReplace "{line}" (toString root.line)
             in
                 a [ href url ] [ text plain ]

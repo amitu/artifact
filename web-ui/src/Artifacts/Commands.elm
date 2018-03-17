@@ -159,7 +159,7 @@ createArtifactsRequestEncoded rpc_id edited =
     let
         -- when creating artifacts, they always have id=0
         withIds =
-            List.map (\a -> ( 0, a )) edited
+            List.map (\a -> ( newId, a )) edited
 
         params =
             Encode.object
@@ -185,7 +185,7 @@ deleteArtifactsRequestEncoded rpc_id artifacts =
 
         params =
             Encode.object
-                [ ( "ids", Encode.list <| List.map Encode.int ids )
+                [ ( "ids", Encode.list <| List.map Encode.string ids )
                 ]
 
         attrs =
@@ -223,7 +223,7 @@ artifactEncoded ( id, edited ) =
         attrs =
             [ ( "id", Encode.string id )
             , ( "name", Encode.string edited.name )
-            , ( "def", Encode.string edited.def )
+            , ( "file", Encode.string edited.file )
             , ( "text", Encode.string edited.text )
             , ( "partof", Encode.list <| List.map Encode.string partof )
             , ( "done", maybeEncoded Encode.string edited.done)
@@ -294,25 +294,49 @@ artifactsDecoder =
 artifactDecoder : Decode.Decoder Artifact
 artifactDecoder =
     decode Artifact
-        |> required "id" Decode.int
-        |> required "revision" Decode.int
+        |> required "id" Decode.string
         |> required "name" nameDecoder
-        |> required "def" Decode.string
+        |> required "file" Decode.string
         |> required "text" Decode.string
-        -- |> hardcoded {- renderedText -} "<i>Please wait while text is rendered</i>"
-        |> required "subnames" (Decode.list Decode.string)
         |> required "partof" (Decode.list nameDecoder)
         |> required "parts" (Decode.list nameDecoder)
-        |> required "code" (Decode.nullable fullLocsDecoder)
-        |> required "done" (Decode.nullable Decode.string)
-        |> required "completed" Decode.float
-        |> required "tested" Decode.float
+        |> required "completed" (completedDecoder)
+        |> required "impl" (implDecoder)
+        |> required "subnames" (Decode.list Decode.string)
         |> hardcoded {- edited -} Nothing
 
 
 nameDecoder : Decode.Decoder Name
 nameDecoder =
     Decode.andThen nameDecoderValue Decode.string
+
+
+completedDecoder : Decode.Decoder Completed
+completedDecoder =
+    decode Completed
+        |> required "spc" Decode.float
+        |> required "tst" Decode.float
+
+
+implDecoder : Decode.Decoder Impl
+implDecoder =
+    Decode.field "type" Decode.string
+        |> Decode.andThen implHelp
+
+
+implHelp : String -> Decode.Decoder Impl
+implHelp ty =
+    case ty of
+        "Done" ->
+            Decode.field "value" (Decode.map Done Decode.string)
+
+        "ImplCode" ->
+            Decode.field "value" (Decode.map Code implCodeDecoder)
+
+        "NotImpl" ->
+            Decode.succeed NotImpl
+
+        _ -> Decode.fail "Invalid impl 'type'"
 
 
 nameDecoderValue : String -> Decode.Decoder Name
@@ -328,15 +352,15 @@ nameDecoderValue name =
             Decode.fail err
 
 
-fullLocsDecoder : Decode.Decoder FullLocs
-fullLocsDecoder =
-    decode FullLocs
-        |> required "root" (Decode.nullable locDecoder)
-        |> required "sublocs" (Decode.dict locDecoder)
+implCodeDecoder : Decode.Decoder ImplCode
+implCodeDecoder =
+    decode ImplCode
+        |> required "primary" (Decode.nullable locDecoder)
+        |> required "secondary" (Decode.dict locDecoder)
 
 
 locDecoder : Decode.Decoder Loc
 locDecoder =
     decode Loc
-        |> required "path" Decode.string
+        |> required "file" Decode.string
         |> required "line" Decode.int
