@@ -117,11 +117,11 @@ getCreateArtifact model =
 
         Nothing ->
             { name = ""
-            , def = ""
+            , file = ""
             , text = ""
             , partof = []
-            , done = ""
-            , revision = 0
+            , done = Nothing
+            , original_id = "FIXME: fake id"
             }
 
 

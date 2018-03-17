@@ -202,6 +202,13 @@ deleteArtifactsRequestEncoded rpc_id artifacts =
 -- ENCODER
 
 
+maybeEncoded : (a -> Encode.Value) -> Maybe a -> Encode.Value
+maybeEncoded encodeIt maybe =
+    case maybe of
+        Just v -> encodeIt v
+        Nothing -> Encode.null
+
+
 artifactsEncoded : List ( ArtifactId, EditableArtifact ) -> Encode.Value
 artifactsEncoded edited =
     Encode.list <| List.map artifactEncoded edited
@@ -213,20 +220,13 @@ artifactEncoded ( id, edited ) =
         partof =
             List.map (\p -> p.raw) edited.partof
 
-        done =
-            if edited.done == "" then
-                Encode.null
-            else
-                Encode.string edited.done
-
         attrs =
-            [ ( "id", Encode.int id )
-            , ( "revision", Encode.int edited.revision )
+            [ ( "id", Encode.string id )
             , ( "name", Encode.string edited.name )
             , ( "def", Encode.string edited.def )
             , ( "text", Encode.string edited.text )
             , ( "partof", Encode.list <| List.map Encode.string partof )
-            , ( "done", done )
+            , ( "done", maybeEncoded Encode.string edited.done)
             ]
     in
         Encode.object attrs

@@ -59,6 +59,7 @@ type alias Artifact =
     , text : String
     , impl : Impl
     , subnames : List String
+    , edited: Maybe EditableArtifact
     }
 
 type Impl
@@ -120,11 +121,11 @@ type alias Artifacts =
 -}
 type alias EditableArtifact =
     { name : String
-    , def : String
-    , text : String
+    , file : String
     , partof : List Name
-    , done : String
-    , revision : Int
+    , done : Maybe String
+    , text : String
+    , original_id: ArtifactId
     }
 
 
@@ -321,39 +322,39 @@ or creates the default one
 -}
 getEditable : Artifact -> EditableArtifact
 getEditable artifact =
-    case artifact.edited of
-        Just e ->
-            e
+    -- FIXME
+    -- case artifact.edited of
+    --     Just e ->
+    --         e
 
-        Nothing ->
+    --     Nothing ->
             createEditable artifact
 
 
 createEditable : Artifact -> EditableArtifact
 createEditable artifact =
     { name = artifact.name.raw
-    , def = artifact.def
+    , file = artifact.file
     , text = artifact.text
     , partof = artifact.partof
     , done =
-        case artifact.done of
-            Just s ->
-                s
+        case artifact.impl of
+            Done s ->
+                Just s
 
-            Nothing ->
-                ""
-    , revision = artifact.revision
+            _ ->
+                Nothing
+    , original_id = artifact.id
     }
 
 
 editedDebug : EditableArtifact -> String
 editedDebug e =
     [ "name = " ++ e.name
-    , "def = " ++ e.def
+    , "file = " ++ e.file
     , "text = " ++ e.text
     , "partof = " ++ (String.join ", " <| List.map (\p -> p.raw) e.partof)
-    , "done = " ++ e.done
-    , "revision = " ++ (toString e.revision)
+    , "done = " ++ (Maybe.withDefault "NULL" e.done)
     ]
         |> String.join " "
 
@@ -374,7 +375,7 @@ editedEqual e1 e2 =
                         |> List.map (\p -> p.raw)
 
                 sanitize =
-                    (\e -> { e | partof = [], revision = 0 })
+                    (\e -> { e | partof = []})
 
                 p1 =
                     Set.fromList <| nonAuto n1 e1.partof
@@ -425,7 +426,7 @@ getArtifactId option =
             artifact.id
 
         CreateChoice _ ->
-            0
+            "FIXME: fake"
 
 
 artifactNameUrl : String -> String
