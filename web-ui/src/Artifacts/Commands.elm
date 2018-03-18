@@ -248,7 +248,8 @@ artifactsFromStrUnsafe json =
                     a
 
                 Err _ ->
-                    []
+                    let _ = Debug.log "INVALID ARTIFACTS:" json
+                    in []
     in
         artifactsFromList artifacts
 
@@ -281,14 +282,16 @@ projectDecoder : Decode.Decoder ProjectData
 projectDecoder =
     decode ProjectData
         |> required "artifacts" artifactsDecoder
-        |> required "files" (Extra.set <| Decode.string)
-        |> required "checked" Decode.string
-        |> required "uuid" Decode.string
+        |> required "paths" projectPathsDecoder
+        |> hardcoded {- checked -} "FIXME: checked"
+        -- |> required "paths" (Extra.set <| Decode.string)
+        -- |> required "checked" Decode.string
+        -- |> required "uuid" Decode.string
 
 
 artifactsDecoder : Decode.Decoder (List Artifact)
 artifactsDecoder =
-    Decode.list artifactDecoder
+    Decode.map Dict.values <| Decode.dict artifactDecoder
 
 
 artifactDecoder : Decode.Decoder Artifact
@@ -305,6 +308,14 @@ artifactDecoder =
         |> required "subnames" (Decode.list Decode.string)
         |> hardcoded {- edited -} Nothing
 
+projectPathsDecoder : Decode.Decoder ProjectPaths
+projectPathsDecoder =
+    decode ProjectPaths
+        |> required "base" Decode.string
+        |> required "code_paths" (Extra.set <| Decode.string)
+        |> required "exclude_code_paths" (Extra.set <| Decode.string)
+        |> required "artifact_paths" (Extra.set <| Decode.string)
+        |> required "exclude_artifact_paths" (Extra.set <| Decode.string)
 
 nameDecoder : Decode.Decoder Name
 nameDecoder =

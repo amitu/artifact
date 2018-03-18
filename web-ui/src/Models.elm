@@ -29,6 +29,7 @@ type alias RenderedText =
 
 type alias Model =
     { artifacts : Artifacts
+    -- FIXME: this needs to be ProjectPaths
     , files : Set.Set String
     , checked : String
     , uuid : String

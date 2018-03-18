@@ -71,10 +71,12 @@ pub fn start_api(cmd: super::Serve) {
 /// the rpc initializer that implements the API spec
 fn init_rpc_handler() -> IoHandler {
     let mut handler = IoHandler::new();
-    // TODO: rename to ReadProject instead of ReadArtifacts
     // FIXME
     // handler.add_method("CreateArtifacts", crud::CreateArtifacts);
+
+    // TODO: rename to ReadProject instead of ReadArtifacts
     handler.add_method("ReadArtifacts", ReadArtifacts);
+
     // handler.add_method("UpdateArtifacts", crud::UpdateArtifacts);
     // handler.add_method("DeleteArtifacts", crud::DeleteArtifacts);
     handler

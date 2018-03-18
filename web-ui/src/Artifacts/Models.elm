@@ -34,15 +34,21 @@ newId =
 
 type alias Project =
     { artifacts : Artifacts
-    , files : Set.Set String
+    , paths : ProjectPaths
     }
 
+type alias ProjectPaths =
+    { base: String
+    , code_paths : Set.Set String
+    , exclude_code_paths : Set.Set String
+    , artifact_paths : Set.Set String
+    , exclude_artifact_paths : Set.Set String
+    }
 
 type alias ProjectData =
     { artifacts : List Artifact
-    , files : Set.Set String
+    , paths : ProjectPaths
     , checked : String
-    , uuid : String
     }
 
 type alias Completed =

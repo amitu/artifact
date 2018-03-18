@@ -36,9 +36,9 @@ update msg model =
                 -- add final attributes
                 final_model =
                     { new_model
-                        | files = project.files
+                        | files = project.paths.artifact_paths
                         , checked = project.checked
-                        , uuid = project.uuid
+                        , uuid = "FIXME: no real uuid"
                     }
             in
                 if model.uuid == "" || model.uuid == final_model.uuid then
