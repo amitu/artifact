@@ -48,6 +48,7 @@ type alias ProjectPaths =
 type alias ProjectData =
     { artifacts : List Artifact
     , paths : ProjectPaths
+    , code_impls: Dict.Dict String ImplCode
     , checked : String
     }
 

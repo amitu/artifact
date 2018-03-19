@@ -23,7 +23,7 @@ build: build-static build-server
 	@echo "-- full elm build complete"
 
 @test:
-	elm test
+	elm test tests/Tests.elm
 
 lint:
 	rm -rf elm-stuff/build_artifacts

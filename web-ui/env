@@ -14,6 +14,7 @@ export PATH="$PATH:/home/garrett/.cargo/bin:/run/current-system/sw/bin"
 
 # https://stackoverflow.com/questions/46227290/elm-make-fails-to-compile-when-running-with-yarn-on-nixos
 CABAL_ELM_MAKE="$PWD/node_modules/elm/Elm-Platform/0.18.0/.cabal-sandbox/bin/elm-make"
+
 rm -f $CABAL_ELM_MAKE
 ln -s $(nix-build -A elmPackages.elm '<nixpkgs>')/bin/elm-make $CABAL_ELM_MAKE
 

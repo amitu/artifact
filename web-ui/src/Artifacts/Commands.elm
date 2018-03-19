@@ -283,6 +283,7 @@ projectDecoder =
     decode ProjectData
         |> required "artifacts" artifactsDecoder
         |> required "paths" projectPathsDecoder
+        |> required "code_impls" (Decode.dict implCodeDecoder)
         |> hardcoded {- checked -} "FIXME: checked"
         -- |> required "paths" (Extra.set <| Decode.string)
         -- |> required "checked" Decode.string
