@@ -2,13 +2,14 @@
 with import <nixpkgs> {};
 
 stdenv.mkDerivation {
- name = "elm-example";
+ name = "artifact-elm";
  src = ./.;
  buildInputs = [ elmPackages.elm nodejs ];
 
  patchPhase = ''
    patchShebangs node_modules/webpack
  '';
+
  buildPhase = ''
    npm run build
  '';
