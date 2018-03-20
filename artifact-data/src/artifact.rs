@@ -26,46 +26,6 @@ use implemented::{Impl, ImplCode};
 use family;
 use graph;
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-/// #SPC-read-structs.artifact
-/// The primary data structure of this library which encapsulates a majority of the useful
-/// end product of a user's project.
-pub struct Artifact {
-    /// The hahs-id of this artifact. This is required for modifying artifacts.
-    pub id: HashIm,
-    /// The name of the artifact.
-    ///
-    /// While this library uses `Name` as the key, other libraries (like a web-ui)
-    /// might not. This also makes it much simpler to reserialize artifacts as
-    /// the mapping cannot be broken.
-    pub name: Name,
-    /// The file the artifact is defined in.
-    pub file: PathArc,
-    /// The user defined and calculated `partof` the artifact.
-    pub partof: OrderSet<Name>,
-    /// The (calculated) parts of the artifact (opposite of partof)
-    pub parts: OrderSet<Name>,
-    /// The (calculated) completion+tested ratios of the artifact.
-    pub completed: graph::Completed,
-    /// The user defined text
-    pub text: String,
-    /// Whether the artifact is implemented directly (in code or `done` field)
-    pub impl_: Impl,
-    /// Subnames in the text.
-    pub subnames: OrderSet<SubName>,
-}
-
-impl Artifact {
-    pub fn sort(&mut self) {
-        self.partof.sort();
-        self.parts.sort();
-        if let Impl::Code(ref mut c) = self.impl_ {
-            c.secondary.sort_keys();
-        }
-        self.subnames.sort();
-    }
-}
-
 /// Loaded and somewhat processed artifacts, independent of source implementations.
 pub(crate) struct ArtifactsLoaded {
     artifact_ims: OrderMap<Name, ArtifactIm>,

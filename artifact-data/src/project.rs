@@ -47,19 +47,8 @@ lazy_static!{
         "#, NAME_VALID_CHARS!())).unwrap();
 }
 
-impl Project {
-    /// Recursively sort all the items in the project.
-    pub fn sort(&mut self) {
-        self.code_impls.sort_keys();
-        for (_, code) in self.code_impls.iter_mut() {
-            code.secondary.sort_keys();
-        }
-        self.artifacts.sort_keys();
-        for (_, art) in self.artifacts.iter_mut() {
-            art.sort();
-        }
-    }
-
+// FIXME: convert to methods instead
+trait ProjectExt {
     /// #SPC-read-lint
     ///
     /// TODO WARN:

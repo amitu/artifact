@@ -30,66 +30,6 @@ use settings;
 
 static ART_BK_EXT: &str = "artbk";
 
-#[derive(Debug, Serialize, Deserialize)]
-/// #SPC-structs.artifact_op
-/// Used for specifying operations to perform.
-pub enum ArtifactOp {
-    Create {
-        artifact: ArtifactIm,
-    },
-    Update {
-        artifact: ArtifactIm,
-        orig_id: HashIm,
-    },
-    Delete {
-        name: Name,
-        orig_id: HashIm,
-    },
-}
-
-struct IdPieces {
-    name: Name,
-    orig_id: Option<HashIm>,
-    new_id: Option<HashIm>,
-}
-
-impl ArtifactOp {
-    pub(crate) fn clean(&mut self) {
-        match *self {
-            ArtifactOp::Create { ref mut artifact }
-            | ArtifactOp::Update {
-                ref mut artifact, ..
-            } => artifact.clean(),
-            _ => {}
-        }
-    }
-
-    fn id_pieces(&self) -> IdPieces {
-        match *self {
-            ArtifactOp::Create { ref artifact } => IdPieces {
-                name: artifact.name.clone(),
-                orig_id: None,
-                new_id: Some(artifact.hash_im()),
-            },
-            ArtifactOp::Update {
-                ref artifact,
-                ref orig_id,
-            } => IdPieces {
-                name: artifact.name.clone(),
-                orig_id: Some(*orig_id),
-                new_id: Some(artifact.hash_im()),
-            },
-            ArtifactOp::Delete {
-                ref name,
-                ref orig_id,
-            } => IdPieces {
-                name: name.clone(),
-                orig_id: Some(*orig_id),
-                new_id: None,
-            },
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct ModifyError {

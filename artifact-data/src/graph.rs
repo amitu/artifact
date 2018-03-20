@@ -24,15 +24,6 @@ use implemented::Impl;
 
 pub(crate) type GraphId = u32;
 
-#[derive(Debug, Default, Clone, PartialEq, PartialOrd, Copy, Serialize, Deserialize)]
-/// #SPC-read-structures.completed
-pub struct Completed {
-    /// The specification completion ratio.
-    pub spc: f32,
-    /// The tested completion ratio.
-    pub tst: f32,
-}
-
 pub(crate) struct Graphs {
     /// Map of `id => name`
     pub lookup_name: OrderMap<GraphId, Name>,

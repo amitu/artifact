@@ -27,28 +27,7 @@ use raw;
 pub const ART_DIR: &str = ".art";
 pub const SETTINGS_FILE: &str = "settings.toml";
 
-#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
-pub(crate) struct SettingsRaw {
-    pub artifact_paths: Vec<String>,
-    pub exclude_artifact_paths: Vec<String>,
-    pub code_paths: Vec<String>,
-    pub exclude_code_paths: Vec<String>,
-}
-
-pub(crate) struct FoundPaths {
-    pub files: Vec<PathFile>,
-    pub dirs: Vec<PathAbs>,
-}
-
-impl FoundPaths {
-    pub(crate) fn new() -> FoundPaths {
-        FoundPaths {
-            files: Vec::new(),
-            dirs: Vec::new(),
-        }
-    }
-}
-
+// FIXME: convert to trait
 impl SettingsRaw {
     fn load<P: AsRef<Path>>(
         project_path: P,
@@ -68,16 +47,6 @@ impl SettingsRaw {
         };
         Ok((project_path, raw))
     }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-/// Paths that have have be recursively loaded.
-pub struct ProjectPaths {
-    pub base: PathDir,
-    pub code_paths: OrderSet<PathAbs>,
-    pub exclude_code_paths: OrderSet<PathAbs>,
-    pub artifact_paths: OrderSet<PathAbs>,
-    pub exclude_artifact_paths: OrderSet<PathAbs>,
 }
 
 pub(crate) fn walk_artifact_paths(
