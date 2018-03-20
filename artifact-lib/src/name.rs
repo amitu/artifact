@@ -142,7 +142,7 @@ pub struct InternalName {
 // CONSTANTS
 
 /// The location in the name where the type is split at
-/// ```markdown,norun
+/// ```text,norun
 /// REQ-foo
 ///    ^
 /// ```
