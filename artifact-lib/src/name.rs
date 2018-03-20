@@ -27,6 +27,8 @@ use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 
 use ergo_std::*;
 use ergo_config::*;
+use failure::*;
+use ordermap::*;
 
 // EXPORTED TYPES AND FUNCTIONS
 
@@ -275,7 +277,7 @@ impl Deref for Name {
 
 impl FromStr for Name {
     type Err = Error;
-    fn from_str(raw: &str) -> Result<Name> {
+    fn from_str(raw: &str) -> super::Result<Name> {
         Ok(Name(Arc::new(InternalName::from_str(raw)?)))
     }
 }
@@ -296,7 +298,7 @@ impl FromStr for InternalName {
     type Err = Error;
 
     /// Use `Name::from_str` instead. This should only be used in this module.
-    fn from_str(raw: &str) -> Result<InternalName> {
+    fn from_str(raw: &str) -> super::Result<InternalName> {
         if !NAME_VALID_RE.is_match(raw) {
             let msg = format!("Name is invalid: {}", raw);
             return Err(NameError::InvalidName { msg: msg }.into());
@@ -427,7 +429,7 @@ impl FromStr for SubName {
     type Err = Error;
 
     /// Primary method to create a subname.
-    fn from_str(raw: &str) -> Result<SubName> {
+    fn from_str(raw: &str) -> super::Result<SubName> {
         if !VALID_SUB_NAME_RE.is_match(raw) {
             Err(NameError::InvalidSubName {
                 msg: format!("{} is not a valid subname", raw),

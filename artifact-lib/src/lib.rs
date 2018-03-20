@@ -10,9 +10,6 @@ extern crate ergo_config;
 #[macro_use]
 extern crate ordermap;
 extern crate path_abs;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
 extern crate siphasher;
 
 use std::fmt;
@@ -21,6 +18,8 @@ use siphasher::sip128::{Hasher128, SipHasher};
 use ergo_std::*;
 use ergo_config::*;
 use path_abs::*;
+use ordermap::*;
+use failure::*;
 
 mod name;
 pub mod lint;
@@ -28,6 +27,7 @@ pub mod lint;
 pub use name::{Name, SubName, Type};
 
 
+pub type Result<V> = result::Result<V, Error>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 /// #SPC-read-structs.artifact
