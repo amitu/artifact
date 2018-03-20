@@ -31,12 +31,6 @@ pub(crate) use failure::Error;
 
 pub(crate) type Result<V> = result::Result<V, Error>;
 
-/// Inplace trim is annoyingly not in the stdlib
-pub(crate) fn string_trim_right(s: &mut String) {
-    let end = s.trim_right().len();
-    s.truncate(end);
-}
-
 #[allow(dead_code)]
 /// A simple implementation of "touch"
 pub(crate) fn touch<P: AsRef<Path>>(path: P) -> ::std::io::Result<()> {

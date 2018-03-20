@@ -14,17 +14,16 @@ extern crate siphasher;
 
 mod name;
 mod dev_prelude;
+mod family;
+mod expand_names;
 pub mod lint;
 
 use std::fmt;
-use std::result;
 use siphasher::sip128::{Hasher128, SipHasher};
 
 use dev_prelude::*;
 pub use name::{Name, SubName, Type};
 
-
-pub type Result<V> = result::Result<V, Error>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 /// #SPC-read-structs.artifact
@@ -202,16 +201,14 @@ impl ArtifactIm {
         HashIm(hasher.finish128().as_bytes())
     }
 
-    // FIXME
-    // /// Process the `ArtifactIm`.
-    // ///
-    // /// This is required whenever serializing/deserializing the ArtifactIm.
-    // pub fn clean(&mut self) {
-    //     family::strip_auto_partofs(&self.name, &mut self.partof);
-    //     self.partof.sort();
-    //     raw::clean_text(&mut self.text);
-    // }
-
+    /// Process the `ArtifactIm`.
+    ///
+    /// This is required whenever serializing/deserializing the ArtifactIm.
+    fn clean(&mut self) {
+        strip_auto_partofs(&self.name, &mut self.partof);
+        self.partof.sort();
+        clean_text(&mut self.text);
+    }
 }
 
 impl From<Artifact> for ArtifactIm {
@@ -227,8 +224,7 @@ impl From<Artifact> for ArtifactIm {
             },
             text: art.text,
         };
-        // FIXME:
-        // out.clean();
+        out.clean();
         out
     }
 }
@@ -317,16 +313,15 @@ struct IdPieces {
 }
 
 impl ArtifactOp {
-    // FIXME:
-    // pub(crate) fn clean(&mut self) {
-    //     match *self {
-    //         ArtifactOp::Create { ref mut artifact }
-    //         | ArtifactOp::Update {
-    //             ref mut artifact, ..
-    //         } => artifact.clean(),
-    //         _ => {}
-    //     }
-    // }
+    pub fn clean(&mut self) {
+        match *self {
+            ArtifactOp::Create { ref mut artifact }
+            | ArtifactOp::Update {
+                ref mut artifact, ..
+            } => artifact.clean(),
+            _ => {}
+        }
+    }
 
     fn id_pieces(&self) -> IdPieces {
         match *self {
@@ -423,3 +418,33 @@ impl Project {
         }
     }
 }
+
+// ------ HELPERS ------
+
+/// "clean" the text so that it can be serialized/deserialized to/from any of the supported
+/// formats.
+pub fn clean_text(s: &mut String) {
+    string_trim_right(s);
+    if s.contains('\n') {
+        s.push('\n');
+    }
+}
+
+
+/// Strip the automatic family from the `partof` set.
+pub fn strip_auto_partofs(name: &Name, names: &mut OrderSet<Name>) {
+    if let Some(p) = name.parent() {
+        names.remove(&p);
+    }
+    if let Some(p) = name.auto_partof() {
+        names.remove(&p);
+    }
+}
+
+
+/// Inplace trim is annoyingly not in the stdlib
+pub fn string_trim_right(s: &mut String) {
+    let end = s.trim_right().len();
+    s.truncate(end);
+}
+

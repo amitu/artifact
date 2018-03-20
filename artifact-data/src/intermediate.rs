@@ -27,10 +27,17 @@ use raw_names::NamesRaw;
 use artifact::Artifact;
 use name::Name;
 
-// FIXME: need to implement these
-trait ArtifactRawIm {
+pub trait ArtifactImExt {
+
     /// Get an `ArtifactIm` from an `ArtifactRaw`.
-    pub(crate) fn from_raw(name: Name, file: PathFile, raw: ArtifactRaw) -> ArtifactIm {
+    pub(crate) fn from_raw(name: Name, file: PathFile, raw: ArtifactRaw) -> ArtifactIm;
+
+    pub(crate) fn into_raw(self) -> (PathArc, Name, ArtifactRaw);
+}
+
+impl ArtifactImExt for ArtifactIm {
+
+    fn from_raw(name: Name, file: PathFile, raw: ArtifactRaw) -> ArtifactIm {
         let mut partof = raw.partof
             .map(|mut p| {
                 family::strip_auto_partofs(&name, &mut p.0);
@@ -48,7 +55,7 @@ trait ArtifactRawIm {
         }
     }
 
-    pub(crate) fn into_raw(self) -> (PathArc, Name, ArtifactRaw) {
+    fn into_raw(self) -> (PathArc, Name, ArtifactRaw) {
         let partof = if self.partof.is_empty() {
             None
         } else {

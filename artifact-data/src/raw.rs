@@ -86,13 +86,6 @@ impl<'de> Deserialize<'de> for TextRaw {
     }
 }
 
-pub(crate) fn clean_text(s: &mut String) {
-    string_trim_right(s);
-    if s.contains('\n') {
-        s.push('\n');
-    }
-}
-
 // ------------------------------
 // -- LOAD
 
