@@ -45,15 +45,6 @@ lazy_static!{
         ARTIFACT_DATA_PATH.join("interop_tests")).unwrap();
 }
 
-/// Join a path to an absolute path. Panic if it doesn't exist.
-pub fn join_abs<P: AsRef<Path>>(path: &PathAbs, end: P) -> PathFile {
-    PathFile::new(path.join(&end)).expect(&format!(
-        "{} + {}",
-        path.display(),
-        end.as_ref().display()
-    ))
-}
-
 /// Given list of `(input, expected)`, assert `method(input) == expected
 pub fn assert_generic<F, I, E>(method: F, values: &[(I, Option<E>)])
 where

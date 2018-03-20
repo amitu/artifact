@@ -26,6 +26,7 @@ use ergo::serde::{Deserialize, Deserializer, Serialize, Serializer};
 use ergo::{json, toml, yaml};
 
 use raw_names::NamesRaw;
+use intermediate::ArtifactImExt;
 
 // TYPES
 

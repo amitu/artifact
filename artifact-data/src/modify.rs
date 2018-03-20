@@ -21,7 +21,8 @@ use std::fmt;
 
 use dev_prelude::*;
 use artifact;
-use project::read_project;
+use project::{ProjectExt, read_project};
+use intermediate::ArtifactImExt;
 use raw;
 use settings;
 

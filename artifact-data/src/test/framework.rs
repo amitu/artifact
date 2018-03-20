@@ -23,6 +23,7 @@ use time;
 use ergo::yaml;
 
 use test::dev_prelude::*;
+use artifact_lib::expected::*;
 use artifact;
 use implemented;
 use settings;
@@ -94,7 +95,7 @@ fn run_interop_test(project_path: PathDir) {
     let start = time::get_time();
     let expect_load_lints = load_lints(&project_path, "assert_load_lints.yaml");
     let expect_project_lints = load_lints(&project_path, "assert_project_lints.yaml");
-    let expect_project = ProjectAssert::load(&project_path).map(|p| p.expected(&project_path));
+    let expect_project = load_project(&project_path).map(|p| p.expected(&project_path));
     let modify_path = project_path.join(MODIFY_NAME);
     let expect_modify_fail = load_lints(&project_path, "assert_modify_fail.yaml");
     let expect_modify_lints = load_lints(&project_path, "assert_modify_lints.yaml");
@@ -158,9 +159,9 @@ fn run_interop_test(project_path: PathDir) {
 fn assert_stuff(
     expect_load_lints: Option<Categorized>,
     expect_project_lints: Option<Categorized>,
-    expect_project: Option<project::Project>,
+    expect_project: Option<Project>,
     load_lints: Categorized,
-    project: Option<project::Project>,
+    project: Option<Project>,
 ) {
     if let Some(expect) = expect_load_lints {
         eprintln!("asserting load lints");
@@ -194,220 +195,16 @@ fn assert_stuff(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "lowercase")]
-enum ArtifactOpAssert {
-    Create {
-        artifact: ArtifactImAssert,
-    },
-    Update {
-        artifact: ArtifactImAssert,
-        name: Name,
-        /// Example: "gQ7cdQ7bvyIoaUTEUsxMsg"
-        id: Option<HashIm>,
-    },
-    Delete {
-        name: Name,
-        /// Example: "gQ7cdQ7bvyIoaUTEUsxMsg"
-        id: Option<HashIm>,
-    },
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ArtifactImAssert {
-    name: Name,
-    file: String,
-    partof: OrderSet<Name>,
-    done: Option<String>,
-    text: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ProjectAssert {
-    paths: ProjectPathsAssert,
-    code_impls: OrderMap<Name, ImplCodeAssert>,
-    artifacts: OrderMap<Name, ArtifactAssert>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ProjectPathsAssert {
-    code_paths: Vec<String>,
-    exclude_code_paths: Vec<String>,
-    artifact_paths: Vec<String>,
-    exclude_artifact_paths: Vec<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ArtifactAssert {
-    name: Name,
-    file: String,
-    partof: OrderSet<Name>,
-    parts: OrderSet<Name>,
-    completed: ::graph::Completed,
-    text: String,
-    impl_: ImplAssert,
-    subnames: OrderSet<SubName>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
-enum ImplAssert {
-    Done(String),
-    Code(ImplCodeAssert),
-    NotImpl,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ImplCodeAssert {
-    primary: Option<CodeLocAssert>,
-    secondary: OrderMap<String, CodeLocAssert>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct CodeLocAssert {
-    file: String,
-    line: u64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-/// Assertions for categorized lints.
-struct CategorizedAssert {
-    error: Vec<lint::Lint>,
-    other: Vec<lint::Lint>,
-}
-
-impl ArtifactImAssert {
-    fn expected(self, base: &PathDir) -> ArtifactIm {
-        let mut out = ArtifactIm {
-            name: self.name,
-            file: PathArc::new(base.join(self.file)),
-            partof: self.partof,
-            done: self.done,
-            text: self.text,
-        };
-        out.clean();
-        out
+/// Load the assertions from the `project_path/assert.yaml` file
+fn load_project(base: &PathDir) -> Option<ProjectAssert> {
+    match PathFile::new(base.join("assert_project.yaml")) {
+        Ok(p) => Some(yaml::from_str(&p.read_string().unwrap()).unwrap()),
+        Err(_) => None,
     }
 }
 
-impl ProjectAssert {
-    /// Load the assertions from the `project_path/assert.yaml` file
-    fn load(base: &PathDir) -> Option<ProjectAssert> {
-        match PathFile::new(base.join("assert_project.yaml")) {
-            Ok(p) => Some(yaml::from_str(&p.read_string().unwrap()).unwrap()),
-            Err(_) => None,
-        }
-    }
 
-    /// Get the "expected" value based on this assertion object.
-    fn expected(mut self, base: &PathDir) -> project::Project {
-        let mut out = project::Project {
-            paths: Arc::new(self.paths.expected(base)),
-            code_impls: self.code_impls
-                .drain(..)
-                .map(|(name, impl_)| (name, impl_.expected(base)))
-                .collect(),
-            artifacts: self.artifacts
-                .drain(..)
-                .map(|(name, art)| (name, art.expected(base)))
-                .collect(),
-        };
-        out.sort();
-        out
-    }
-}
-
-impl ProjectPathsAssert {
-    fn expected(self, base: &PathDir) -> settings::ProjectPaths {
-        settings::ProjectPaths {
-            base: base.clone(),
-            code_paths: prefix_paths(base, &self.code_paths),
-            exclude_code_paths: prefix_paths(base, &self.exclude_code_paths),
-            artifact_paths: prefix_paths(base, &self.artifact_paths),
-            exclude_artifact_paths: prefix_paths(base, &self.exclude_artifact_paths),
-        }
-    }
-}
-
-impl ArtifactAssert {
-    fn expected(self, base: &PathAbs) -> artifact::Artifact {
-        let mut art = artifact::Artifact {
-            id: HashIm([0; 16]),
-            name: self.name,
-            file: PathArc::new(base.join(&self.file)),
-            partof: self.partof,
-            parts: self.parts,
-            completed: self.completed,
-            text: self.text,
-            impl_: self.impl_.expected(base),
-            subnames: self.subnames,
-        };
-
-        art.id = ArtifactIm::from(art.clone()).hash_im();
-        art
-    }
-}
-
-impl ImplAssert {
-    fn expected(self, base: &PathAbs) -> implemented::Impl {
-        match self {
-            ImplAssert::Done(d) => implemented::Impl::Done(d),
-            ImplAssert::Code(c) => implemented::Impl::Code(c.expected(base)),
-            ImplAssert::NotImpl => implemented::Impl::NotImpl,
-        }
-    }
-}
-
-impl ImplCodeAssert {
-    fn expected(mut self, base: &PathAbs) -> implemented::ImplCode {
-        implemented::ImplCode {
-            primary: self.primary.map(|c| c.expected(base)),
-            secondary: self.secondary
-                .drain(..)
-                .map(|(s, c)| (subname!(s), c.expected(base)))
-                .collect(),
-        }
-    }
-}
-
-impl CodeLocAssert {
-    fn expected(self, base: &PathAbs) -> implemented::CodeLoc {
-        implemented::CodeLoc {
-            file: join_abs(base, self.file),
-            line: self.line,
-        }
-    }
-}
-
-impl lint::Lint {
-    /// just mutate the lint to be correct
-    fn make_expected(&mut self, base: &PathAbs) {
-        if let Some(ref mut p) = self.path {
-            *p = PathArc::new(base.join(&p));
-        }
-    }
-}
-
-impl CategorizedAssert {
-    fn expected(mut self, base: &PathAbs) -> Categorized {
-        let convert_lints = |lints: &mut Vec<lint::Lint>| {
-            lints
-                .iter_mut()
-                .map(|l| {
-                    l.make_expected(base);
-                })
-                .count();
-        };
-        convert_lints(&mut self.error);
-        convert_lints(&mut self.other);
-        Categorized {
-            error: self.error,
-            other: self.other,
-        }
-    }
-}
-
-fn load_modify(base: &PathDir, project: &project::Project, fname: &str) -> Option<Vec<ArtifactOp>> {
+fn load_modify(base: &PathDir, project: &Project, fname: &str) -> Option<Vec<ArtifactOp>> {
     match PathFile::new(base.join(fname)) {
         Ok(p) => {
             let mut assert: Vec<ArtifactOpAssert> =
@@ -458,16 +255,4 @@ fn load_lints(base: &PathDir, fname: &str) -> Option<Categorized> {
         }
         Err(_) => None,
     }
-}
-
-// HELPERS
-
-/// Add the path prefix to a list of strings
-fn prefix_paths(base: &PathAbs, ends: &[String]) -> OrderSet<PathAbs> {
-    ends.iter()
-        .map(|e| match PathAbs::new(base.join(e)) {
-            Ok(p) => p,
-            Err(e) => panic!("{}", e),
-        })
-        .collect()
 }

@@ -119,7 +119,7 @@ fn sanity_determine_completed() {
         },
     };
 
-    type C = graph::Completed;
+    type C = Completed;
     let mut completed = graph::determine_completed(&graphs, &impls, &subnames);
     let spc_bbb_b = 1.0_f64 / 4.0_f64;
     let spc_bbb = (3.0_f64 + spc_bbb_b + 0.0_f64) / (4.0_f64 + 2.0_f64);

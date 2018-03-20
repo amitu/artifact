@@ -124,8 +124,8 @@ pub struct SubName(pub Arc<InternalSubName>);
 
 /// Internal SubName object, use SubName instead.
 pub struct InternalSubName {
-    pub(crate) raw: String,
-    pub(crate) key: String,
+    pub raw: String,
+    pub key: String,
 }
 
 /// Internal Name object, use Name instead.
@@ -134,9 +134,9 @@ pub struct InternalName {
     /// The artifact type, determined from the name prefix
     pub ty: Type,
     /// Capitalized form
-    pub(crate) key: String,
+    pub key: String,
     /// Raw "user" form
-    pub(crate) raw: String,
+    pub raw: String,
 }
 
 // CONSTANTS
@@ -379,7 +379,7 @@ impl<'de> Deserialize<'de> for SubName {
 
 impl SubName {
     /// Unchecked creation of subname
-    pub(crate) fn new_unchecked(raw: &str) -> SubName {
+    pub fn new_unchecked(raw: &str) -> SubName {
         debug_assert!(VALID_SUB_NAME_RE.is_match(raw), "raw: {:?}", raw);
         SubName(Arc::new(InternalSubName {
             raw: raw.to_string(),

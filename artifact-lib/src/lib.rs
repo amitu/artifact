@@ -20,6 +20,7 @@ mod family;
 #[macro_use]
 mod expand_names;
 pub mod lint;
+pub mod expected;
 
 use std::fmt;
 use siphasher::sip128::{Hasher128, SipHasher};
@@ -210,7 +211,7 @@ impl ArtifactIm {
     /// Process the `ArtifactIm`.
     ///
     /// This is required whenever serializing/deserializing the ArtifactIm.
-    fn clean(&mut self) {
+    pub fn clean(&mut self) {
         strip_auto_partofs(&self.name, &mut self.partof);
         self.partof.sort();
         clean_text(&mut self.text);
@@ -312,10 +313,10 @@ pub enum ArtifactOp {
     },
 }
 
-struct IdPieces {
-    name: Name,
-    orig_id: Option<HashIm>,
-    new_id: Option<HashIm>,
+pub struct IdPieces {
+    pub name: Name,
+    pub orig_id: Option<HashIm>,
+    pub new_id: Option<HashIm>,
 }
 
 impl ArtifactOp {
@@ -329,7 +330,7 @@ impl ArtifactOp {
         }
     }
 
-    fn id_pieces(&self) -> IdPieces {
+    pub fn id_pieces(&self) -> IdPieces {
         match *self {
             ArtifactOp::Create { ref artifact } => IdPieces {
                 name: artifact.name.clone(),
@@ -430,5 +431,14 @@ pub fn strip_auto_partofs(name: &Name, names: &mut OrderSet<Name>) {
 pub fn string_trim_right(s: &mut String) {
     let end = s.trim_right().len();
     s.truncate(end);
+}
+
+/// Join a path to an absolute path. Panic if it doesn't exist.
+pub fn join_abs<P: AsRef<Path>>(path: &PathAbs, end: P) -> PathFile {
+    PathFile::new(path.join(&end)).expect(&format!(
+        "{} + {}",
+        path.display(),
+        end.as_ref().display()
+    ))
 }
 

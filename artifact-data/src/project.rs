@@ -24,13 +24,6 @@ use implemented;
 use raw;
 use settings;
 
-#[derive(Debug, PartialEq, Serialize)]
-pub struct Project {
-    pub paths: settings::ProjectPaths,
-    pub code_impls: OrderMap<Name, implemented::ImplCode>,
-    pub artifacts: OrderMap<Name, artifact::Artifact>,
-}
-
 lazy_static!{
     /// Name reference that can exist in source code
     static ref TEXT_REF_RE: Regex = Regex::new(
