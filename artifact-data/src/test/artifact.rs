@@ -20,8 +20,6 @@
 
 use test::dev_prelude::*;
 use test::framework::run_interop_tests;
-use intermediate::ArtifactIm;
-use name::Name;
 use artifact;
 
 #[test]

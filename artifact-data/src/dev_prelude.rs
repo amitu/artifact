@@ -23,6 +23,8 @@ pub use std::cmp::PartialOrd;
 pub use std::hash::{Hash, Hasher};
 use std::io;
 use std::fs;
+pub use artifact_lib::*;
+pub use artifact_lib;
 
 pub(crate) use ordermap::{OrderMap, OrderSet};
 

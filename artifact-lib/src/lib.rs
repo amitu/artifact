@@ -12,9 +12,12 @@ extern crate ordermap;
 extern crate path_abs;
 extern crate siphasher;
 
+#[macro_use]
 mod name;
 mod dev_prelude;
+#[macro_use]
 mod family;
+#[macro_use]
 mod expand_names;
 pub mod lint;
 
@@ -22,7 +25,10 @@ use std::fmt;
 use siphasher::sip128::{Hasher128, SipHasher};
 
 use dev_prelude::*;
-pub use name::{Name, SubName, Type};
+pub use name::{Name, SubName, InternalSubName, Type, parse_subnames, NAME_VALID_STR};
+pub use family::{Names, auto_partofs};
+pub use expand_names::expand_names;
+pub use lint::{Categorized, Category, Level, Lint};
 
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -110,7 +116,7 @@ impl Impl {
     /// both spc AND tst for REQ and SPC types.
     ///
     /// `subnames` should contain the subnames that exist in that artifact's text
-    pub(crate) fn to_statistics(&self, subnames: &OrderSet<SubName>) -> (usize, f64, usize, f64) {
+    pub fn to_statistics(&self, subnames: &OrderSet<SubName>) -> (usize, f64, usize, f64) {
         match *self {
             Impl::Done(_) => (1, 1.0, 1, 1.0),
             Impl::Code(ref impl_) => {
@@ -177,7 +183,7 @@ impl fmt::Debug for CodeLoc {
 
 /// The type used for unique hash ids
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
-pub struct HashIm(pub(crate) [u8; 16]);
+pub struct HashIm(pub [u8; 16]);
 
 #[derive(Debug, Serialize, Deserialize)]
 /// #SPC-structs.artifact_im
@@ -351,28 +357,6 @@ impl ArtifactOp {
 }
 
 // ----- SETTINGS -----
-
-#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
-pub(crate) struct SettingsRaw {
-    pub artifact_paths: Vec<String>,
-    pub exclude_artifact_paths: Vec<String>,
-    pub code_paths: Vec<String>,
-    pub exclude_code_paths: Vec<String>,
-}
-
-pub(crate) struct FoundPaths {
-    pub files: Vec<PathFile>,
-    pub dirs: Vec<PathAbs>,
-}
-
-impl FoundPaths {
-    pub(crate) fn new() -> FoundPaths {
-        FoundPaths {
-            files: Vec::new(),
-            dirs: Vec::new(),
-        }
-    }
-}
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 /// Paths that have have be recursively loaded.

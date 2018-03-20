@@ -21,8 +21,6 @@ use time;
 use dev_prelude::*;
 use artifact;
 use implemented;
-use lint;
-use name::{Name, SubName};
 use raw;
 use settings;
 
@@ -48,19 +46,25 @@ lazy_static!{
 }
 
 // FIXME: convert to methods instead
-trait ProjectExt {
+pub trait ProjectExt {
+    fn lint(&self, send: &Sender<lint::Lint>);
+    fn lint_errors(&self, send: &Sender<lint::Lint>);
+    fn lint_other(&self, send: &Sender<lint::Lint>);
+}
+
+impl ProjectExt for Project {
     /// #SPC-read-lint
     ///
     /// TODO WARN:
     /// - references in text that do not exist
     /// - (optional?) poorly formed references in text
-    pub fn lint(&self, send: &Sender<lint::Lint>) {
+    fn lint(&self, send: &Sender<lint::Lint>) {
         self.lint_errors(&send);
         self.lint_other(&send);
     }
 
     /// Lint against only "fatal" errors.
-    pub fn lint_errors(&self, send: &Sender<lint::Lint>) {
+    fn lint_errors(&self, send: &Sender<lint::Lint>) {
         lint_partof_dne(send, self);
         lint_partof_types(send, self);
         lint_artifact_text(send, self);
@@ -68,7 +72,7 @@ trait ProjectExt {
     }
 
     /// Lint against non-fatal errors.
-    pub fn lint_other(&self, send: &Sender<lint::Lint>) {
+    fn lint_other(&self, send: &Sender<lint::Lint>) {
         lint_artifact_text_refs(send, self);
         lint_code_impls(send, self);
     }
@@ -224,7 +228,7 @@ pub(crate) fn lint_partof_dne(lints: &Sender<lint::Lint>, project: &Project) {
 /// #REQ-family.lint_types
 /// Lint against partof's that have invalid types.
 pub(crate) fn lint_partof_types(lints: &Sender<lint::Lint>, project: &Project) {
-    use name::Type::{REQ, SPC, TST};
+    use artifact_lib::Type::{REQ, SPC, TST};
     for (name, art) in project.artifacts.iter() {
         for pof in art.partof.iter() {
             let invalid = match (name.ty, pof.ty) {
@@ -279,7 +283,6 @@ pub(crate) fn lint_artifact_done_subnames(lints: &Sender<lint::Lint>, project: &
 
 /// Lint against code_impls
 pub(crate) fn lint_code_impls(lints: &Sender<lint::Lint>, project: &Project) {
-    use implemented::{CodeLoc, Impl};
     let send_lint = |name: &Name, sub: Option<&SubName>, loc: &CodeLoc, msg: &str| {
         lints
             .send(lint::Lint {

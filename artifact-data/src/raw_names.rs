@@ -21,7 +21,6 @@ use std::fmt;
 use ergo::serde;
 use ergo::serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
 use ergo::serde::ser::{Serialize, Serializer};
-use name::Name;
 
 #[macro_export]
 /// Macro to get 'raw' names with no error checking
@@ -77,7 +76,7 @@ impl FromStr for NamesRaw {
     type Err = Error;
     /// Parse a collapsed set of names to create them
     fn from_str(collapsed: &str) -> Result<NamesRaw> {
-        Ok(NamesRaw(::expand_names::expand_names(collapsed)?))
+        Ok(NamesRaw(expand_names(collapsed)?))
     }
 }
 

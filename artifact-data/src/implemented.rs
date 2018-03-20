@@ -23,8 +23,6 @@
 use std::fmt;
 use ordermap::map::Entry;
 use dev_prelude::*;
-use name::{Name, SubName};
-use lint;
 
 lazy_static!{
     /// Name reference that can exist in source code

@@ -22,10 +22,8 @@ use regex_generate;
 use test::dev_prelude::*;
 use test::raw_names::arb_names_raw;
 use test::framework::run_interop_tests;
-use name::{Name, SubName};
 use raw_names::NamesRaw;
-use implemented::{join_locations, parse_locations, CodeLoc, ImplCode};
-use lint;
+use implemented::{join_locations, parse_locations};
 
 // ------------------------------
 // -- FUZZ METHODS

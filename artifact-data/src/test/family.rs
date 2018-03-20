@@ -20,9 +20,6 @@
 
 use ergo::json;
 
-use name::{Name, Type};
-use family::{self, Names};
-use expand_names::expand_names;
 use raw_names::NamesRaw;
 use test::dev_prelude::*;
 use test::name::arb_name;
@@ -469,7 +466,7 @@ fn sanity_auto_partofs() {
         spc_a_b.clone() => orderset![],
         tst_a_b.clone() => orderset![spc_a_b.clone()],
     };
-    let auto = family::auto_partofs(&names);
+    let auto = auto_partofs(&names);
     assert_eq!(expected, auto);
 }
 
@@ -483,7 +480,7 @@ fn sanity_strip_auto_partofs() {
         name!("SPC-foo"),
     ];
     let expected = orderset![name!("REQ-bar"), name!("REQ-foo"), name!("SPC-bar"),];
-    family::strip_auto_partofs(&name!("SPC-foo-bar"), &mut result);
+    strip_auto_partofs(&name!("SPC-foo-bar"), &mut result);
     assert_eq!(expected, result);
 }
 

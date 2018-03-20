@@ -120,7 +120,7 @@ pub enum Type {
 /// // Helper to get the full name
 /// assert_eq!(name!("REQ-foo").full(Some(&sub)), "REQ-foo.sub_name");
 /// # }
-pub struct SubName(pub(crate) Arc<InternalSubName>);
+pub struct SubName(pub Arc<InternalSubName>);
 
 /// Internal SubName object, use SubName instead.
 pub struct InternalSubName {
@@ -148,6 +148,7 @@ pub struct InternalName {
 /// ```
 pub const TYPE_SPLIT_LOC: usize = 3;
 
+#[macro_export]
 macro_rules! NAME_VALID_CHARS {
     () => { "A-Z0-9_" };
 }
@@ -285,7 +286,7 @@ impl FromStr for Name {
 // PUBLIC METHODS
 
 /// Parse subnames from the text field.
-pub(crate) fn parse_subnames(text: &str) -> OrderSet<SubName> {
+pub fn parse_subnames(text: &str) -> OrderSet<SubName> {
     TEXT_SUB_NAME_RE
         .captures_iter(text)
         .map(|cap| SubName::new_unchecked(cap.get(1).unwrap().as_str()))

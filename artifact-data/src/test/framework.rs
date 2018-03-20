@@ -23,14 +23,11 @@ use time;
 use ergo::yaml;
 
 use test::dev_prelude::*;
-use name::{Name, SubName};
 use artifact;
 use implemented;
-use intermediate::{self, ArtifactIm};
 use settings;
 use project;
-use modify::{self, ArtifactOp};
-use lint::{self, Categorized};
+use modify;
 
 /// This runs the interop tests.
 ///
@@ -207,12 +204,12 @@ enum ArtifactOpAssert {
         artifact: ArtifactImAssert,
         name: Name,
         /// Example: "gQ7cdQ7bvyIoaUTEUsxMsg"
-        id: Option<intermediate::HashIm>,
+        id: Option<HashIm>,
     },
     Delete {
         name: Name,
         /// Example: "gQ7cdQ7bvyIoaUTEUsxMsg"
-        id: Option<intermediate::HashIm>,
+        id: Option<HashIm>,
     },
 }
 
@@ -335,7 +332,7 @@ impl ProjectPathsAssert {
 impl ArtifactAssert {
     fn expected(self, base: &PathAbs) -> artifact::Artifact {
         let mut art = artifact::Artifact {
-            id: intermediate::HashIm([0; 16]),
+            id: HashIm([0; 16]),
             name: self.name,
             file: PathArc::new(base.join(&self.file)),
             partof: self.partof,
@@ -418,14 +415,14 @@ fn load_modify(base: &PathDir, project: &project::Project, fname: &str) -> Optio
             // If the id is given, just use that.
             //
             // Otherwise pull it from the artifact name
-            let get_id = |id, name: &Name| -> intermediate::HashIm {
+            let get_id = |id, name: &Name| -> HashIm {
                 if let Some(id) = id {
                     return id;
                 }
                 eprintln!("Getting id for name: {}", name.as_str());
                 match project.artifacts.get(name) {
                     Some(art) => art.id,
-                    None => intermediate::HashIm([0; 16]),
+                    None => HashIm([0; 16]),
                 }
             };
 

@@ -21,7 +21,6 @@ pub use ergo::rand::{self, Rng};
 use regex_generate;
 use unicode_segmentation::UnicodeSegmentation;
 
-use name::{Name, SubName};
 use ergo::serde::{Deserialize, Serialize};
 
 pub type StrResult<T> = result::Result<T, String>;

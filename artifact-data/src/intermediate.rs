@@ -21,18 +21,15 @@ use siphasher::sip128::{Hasher128, SipHasher};
 use ergo::serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 
 use dev_prelude::*;
-use family;
 use raw::{self, ArtifactRaw, TextRaw};
 use raw_names::NamesRaw;
-use artifact::Artifact;
-use name::Name;
 
 pub trait ArtifactImExt {
 
     /// Get an `ArtifactIm` from an `ArtifactRaw`.
-    pub(crate) fn from_raw(name: Name, file: PathFile, raw: ArtifactRaw) -> ArtifactIm;
+    fn from_raw(name: Name, file: PathFile, raw: ArtifactRaw) -> ArtifactIm;
 
-    pub(crate) fn into_raw(self) -> (PathArc, Name, ArtifactRaw);
+    fn into_raw(self) -> (PathArc, Name, ArtifactRaw);
 }
 
 impl ArtifactImExt for ArtifactIm {
@@ -40,7 +37,7 @@ impl ArtifactImExt for ArtifactIm {
     fn from_raw(name: Name, file: PathFile, raw: ArtifactRaw) -> ArtifactIm {
         let mut partof = raw.partof
             .map(|mut p| {
-                family::strip_auto_partofs(&name, &mut p.0);
+                strip_auto_partofs(&name, &mut p.0);
                 p.drain(..).collect()
             })
             .unwrap_or_else(OrderSet::new);

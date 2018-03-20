@@ -19,8 +19,6 @@ use petgraph;
 use petgraph::graphmap::DiGraphMap;
 
 use dev_prelude::*;
-use name::{Name, SubName, Type};
-use implemented::Impl;
 
 pub(crate) type GraphId = u32;
 

@@ -20,10 +20,6 @@
 use rayon;
 
 use dev_prelude::*;
-use intermediate::{ArtifactIm, HashIm};
-use name::{self, Name, SubName};
-use implemented::{Impl, ImplCode};
-use family;
 use graph;
 
 /// Loaded and somewhat processed artifacts, independent of source implementations.
@@ -124,7 +120,7 @@ pub(crate) fn determine_artifacts(
 pub(crate) fn determine_partofs(
     artifact_ims: &OrderMap<Name, ArtifactIm>,
 ) -> OrderMap<Name, OrderSet<Name>> {
-    let mut partofs = family::auto_partofs(artifact_ims);
+    let mut partofs = auto_partofs(artifact_ims);
     // extend the user defined partofs with the automatic ones
     for (name, partof) in partofs.iter_mut() {
         partof.extend(artifact_ims[name].partof.iter().cloned());
@@ -139,7 +135,7 @@ fn determine_subnames(
 ) -> OrderMap<Name, OrderSet<SubName>> {
     artifact_ims
         .iter()
-        .map(|(name, art)| (name.clone(), name::parse_subnames(&art.text)))
+        .map(|(name, art)| (name.clone(), parse_subnames(&art.text)))
         .collect()
 }
 

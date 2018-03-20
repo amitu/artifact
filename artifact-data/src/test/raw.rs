@@ -18,7 +18,6 @@
 //! This module is for testing the serialization and deserialization
 //! of RAW artifacts.
 
-use name::{Name, SubName};
 use raw::{from_markdown, to_markdown, ArtifactRaw, TextRaw, ATTRS_END_RE, NAME_LINE_RE};
 use raw_names::NamesRaw;
 use test::dev_prelude::*;

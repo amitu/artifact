@@ -25,10 +25,7 @@ use std::fmt;
 use ergo::serde::{Deserialize, Deserializer, Serialize, Serializer};
 use ergo::{json, toml, yaml};
 
-use intermediate::ArtifactIm;
-use name::Name;
 use raw_names::NamesRaw;
-use lint;
 
 // TYPES
 
@@ -175,7 +172,7 @@ pub(crate) fn load_file(lints: &Sender<lint::Lint>, send: &Sender<ArtifactIm>, f
 
 lazy_static!{
     pub(crate) static ref NAME_LINE_RE: Regex = Regex::new(
-        &format!(r"(?i)^#\s*({})\s*$", ::name::NAME_VALID_STR)).unwrap();
+        &format!(r"(?i)^#\s*({})\s*$", NAME_VALID_STR)).unwrap();
 
     pub(crate) static ref ATTRS_END_RE: Regex = Regex::new(r"^###+\s*$").unwrap();
 }

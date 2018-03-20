@@ -21,10 +21,7 @@ use std::fmt;
 
 use dev_prelude::*;
 use artifact;
-use intermediate::{ArtifactIm, HashIm};
-use lint;
-use name::Name;
-use project::{read_project, Project};
+use project::read_project;
 use raw;
 use settings;
 
@@ -292,7 +289,7 @@ fn perform_operations(
 }
 
 /// #SPC-modify.backup
-fn create_backups(lints: &mut lint::Categorized, paths: settings::ProjectPaths) {
+fn create_backups(lints: &mut lint::Categorized, paths: ProjectPaths) {
     // TODO: figure out how to just use a reference
     let paths = Arc::new(paths);
     let recv_lint = {
@@ -333,7 +330,7 @@ fn create_backups(lints: &mut lint::Categorized, paths: settings::ProjectPaths) 
     lints.categorize(recv_lint.iter());
 }
 
-fn remove_backups(lints: &mut lint::Categorized, paths: settings::ProjectPaths) {
+fn remove_backups(lints: &mut lint::Categorized, paths: ProjectPaths) {
     // TODO: figure out how to just use a reference
     let paths = Arc::new(paths);
     let recv_lint = {

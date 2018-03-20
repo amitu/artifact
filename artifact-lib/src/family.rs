@@ -159,7 +159,7 @@ impl<'de> Visitor<'de> for NamesVisitor {
 
 /// #SPC-read-family.auto
 /// Given an ordermap of all names, return the partof attributes that will be added.
-pub(crate) fn auto_partofs<T>(names: &OrderMap<Name, T>) -> OrderMap<Name, OrderSet<Name>> {
+pub fn auto_partofs<T>(names: &OrderMap<Name, T>) -> OrderMap<Name, OrderSet<Name>> {
     let mut out: OrderMap<Name, OrderSet<Name>> = OrderMap::with_capacity(names.len());
     for name in names.keys() {
         let mut auto = OrderSet::new();

@@ -18,9 +18,7 @@
 //! computing artifacts.
 
 use test::dev_prelude::*;
-use name::{Name, SubName};
 use graph::{self, round_ratio};
-use implemented::{CodeLoc, Impl, ImplCode};
 
 /// create the `partof`s and the graphs
 fn simple_graph() -> (OrderMap<Name, OrderSet<Name>>, graph::Graphs) {
