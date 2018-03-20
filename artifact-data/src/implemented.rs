@@ -21,7 +21,7 @@
 #![allow(dead_code)]
 
 use std::fmt;
-use ordermap::map::Entry;
+use indexmap::map::Entry;
 use dev_prelude::*;
 
 lazy_static!{
@@ -89,10 +89,10 @@ pub(crate) fn parse_locations<R: Read>(
 pub(crate) fn join_locations(
     send_lints: &Sender<lint::Lint>,
     mut locations: Vec<(CodeLoc, Name, Option<SubName>)>,
-) -> OrderMap<Name, ImplCode> {
+) -> IndexMap<Name, ImplCode> {
     // split into primary and secondary, simultaniously checking there are no duplicates.
-    let mut primary_locs: OrderMap<Name, CodeLoc> = OrderMap::new();
-    let mut secondary_locs: OrderMap<Name, OrderMap<SubName, CodeLoc>> = OrderMap::new();
+    let mut primary_locs: IndexMap<Name, CodeLoc> = IndexMap::new();
+    let mut secondary_locs: IndexMap<Name, IndexMap<SubName, CodeLoc>> = IndexMap::new();
     for (loc, name, sub) in locations.drain(0..) {
         if let Some(sub) = sub {
             insert_secondary(send_lints, &mut secondary_locs, &name, &sub, loc);
@@ -103,9 +103,9 @@ pub(crate) fn join_locations(
     }
 
     // Now join them together
-    let empty_hash = OrderMap::with_capacity(0);
-    let mut out: OrderMap<Name, ImplCode> =
-        OrderMap::from_iter(primary_locs.drain(..).map(|(name, loc)| {
+    let empty_hash = IndexMap::with_capacity(0);
+    let mut out: IndexMap<Name, ImplCode> =
+        IndexMap::from_iter(primary_locs.drain(..).map(|(name, loc)| {
             let code = ImplCode {
                 primary: Some(loc),
                 secondary: secondary_locs
@@ -133,7 +133,7 @@ pub(crate) fn join_locations(
 /// internal helper for `join_locations`
 fn insert_secondary(
     send_lints: &Sender<lint::Lint>,
-    locs: &mut OrderMap<Name, OrderMap<SubName, CodeLoc>>,
+    locs: &mut IndexMap<Name, IndexMap<SubName, CodeLoc>>,
     name: &Name,
     sub: &SubName,
     loc: CodeLoc,
@@ -157,7 +157,7 @@ fn insert_secondary(
             }
         }
         Entry::Vacant(entry) => {
-            entry.insert(ordermap!{sub.clone() => loc});
+            entry.insert(indexmap!{sub.clone() => loc});
         }
     }
 }

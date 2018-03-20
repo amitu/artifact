@@ -8,7 +8,7 @@ extern crate failure_derive;
 extern crate ergo_std;
 extern crate ergo_config;
 #[macro_use]
-extern crate ordermap;
+extern crate indexmap;
 extern crate path_abs;
 extern crate siphasher;
 
@@ -48,9 +48,9 @@ pub struct Artifact {
     /// The file the artifact is defined in.
     pub file: PathArc,
     /// The user defined and calculated `partof` the artifact.
-    pub partof: OrderSet<Name>,
+    pub partof: IndexSet<Name>,
     /// The (calculated) parts of the artifact (opposite of partof)
-    pub parts: OrderSet<Name>,
+    pub parts: IndexSet<Name>,
     /// The (calculated) completion+tested ratios of the artifact.
     pub completed: Completed,
     /// The user defined text
@@ -58,7 +58,7 @@ pub struct Artifact {
     /// Whether the artifact is implemented directly (in code or `done` field)
     pub impl_: Impl,
     /// Subnames in the text.
-    pub subnames: OrderSet<SubName>,
+    pub subnames: IndexSet<SubName>,
 }
 
 impl Artifact {
@@ -90,7 +90,7 @@ pub enum Impl {
 /// Encapsulates the implementation state of the artifact in code.
 pub struct ImplCode {
     pub primary: Option<CodeLoc>,
-    pub secondary: OrderMap<SubName, CodeLoc>,
+    pub secondary: IndexMap<SubName, CodeLoc>,
 }
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -117,7 +117,7 @@ impl Impl {
     /// both spc AND tst for REQ and SPC types.
     ///
     /// `subnames` should contain the subnames that exist in that artifact's text
-    pub fn to_statistics(&self, subnames: &OrderSet<SubName>) -> (usize, f64, usize, f64) {
+    pub fn to_statistics(&self, subnames: &IndexSet<SubName>) -> (usize, f64, usize, f64) {
         match *self {
             Impl::Done(_) => (1, 1.0, 1, 1.0),
             Impl::Code(ref impl_) => {
@@ -191,7 +191,7 @@ pub struct HashIm(pub [u8; 16]);
 pub struct ArtifactIm {
     pub name: Name,
     pub file: PathArc,
-    pub partof: OrderSet<Name>,
+    pub partof: IndexSet<Name>,
     pub done: Option<String>,
     pub text: String,
 }
@@ -363,10 +363,10 @@ impl ArtifactOp {
 /// Paths that have have be recursively loaded.
 pub struct ProjectPaths {
     pub base: PathDir,
-    pub code_paths: OrderSet<PathAbs>,
-    pub exclude_code_paths: OrderSet<PathAbs>,
-    pub artifact_paths: OrderSet<PathAbs>,
-    pub exclude_artifact_paths: OrderSet<PathAbs>,
+    pub code_paths: IndexSet<PathAbs>,
+    pub exclude_code_paths: IndexSet<PathAbs>,
+    pub artifact_paths: IndexSet<PathAbs>,
+    pub exclude_artifact_paths: IndexSet<PathAbs>,
 }
 
 // ------ COMPLETED ------
@@ -386,8 +386,8 @@ pub struct Completed {
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Project {
     pub paths: ProjectPaths,
-    pub code_impls: OrderMap<Name, ImplCode>,
-    pub artifacts: OrderMap<Name, Artifact>,
+    pub code_impls: IndexMap<Name, ImplCode>,
+    pub artifacts: IndexMap<Name, Artifact>,
 }
 
 impl Project {
@@ -417,7 +417,7 @@ pub fn clean_text(s: &mut String) {
 
 
 /// Strip the automatic family from the `partof` set.
-pub fn strip_auto_partofs(name: &Name, names: &mut OrderSet<Name>) {
+pub fn strip_auto_partofs(name: &Name, names: &mut IndexSet<Name>) {
     if let Some(p) = name.parent() {
         names.remove(&p);
     }

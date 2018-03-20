@@ -104,7 +104,7 @@ pub fn modify_project<P: AsRef<Path>>(
 
     let mut artifacts = original_project.artifacts;
 
-    let mut artifact_ims: OrderMap<HashIm, ArtifactIm> = artifacts
+    let mut artifact_ims: IndexMap<HashIm, ArtifactIm> = artifacts
         .drain(..)
         .map(|(_, art)| {
             let im = ArtifactIm::from(art);
@@ -206,7 +206,7 @@ fn check_paths(lints: &mut lint::Categorized, project: &Project, operations: &[A
 }
 
 fn check_overlap(lints: &mut lint::Categorized, operations: &mut Vec<ArtifactOp>) {
-    let mut ids = OrderSet::new();
+    let mut ids = IndexSet::new();
 
     for mut op in operations {
         op.clean();
@@ -248,7 +248,7 @@ fn check_overlap(lints: &mut lint::Categorized, operations: &mut Vec<ArtifactOp>
 fn perform_operations(
     mut operations: Vec<ArtifactOp>,
     lints: &mut lint::Categorized,
-    artifact_ims: &mut OrderMap<HashIm, ArtifactIm>,
+    artifact_ims: &mut IndexMap<HashIm, ArtifactIm>,
 ) {
     for op in operations.drain(..) {
         match op {
@@ -377,11 +377,11 @@ fn remove_backups(lints: &mut lint::Categorized, paths: ProjectPaths) {
 /// Save the project to disk, recording any lints along the way
 fn save_project(lints: &mut lint::Categorized, project: &Project) {
     // split up the artifacts into their relevant files
-    let mut files: OrderMap<PathArc, OrderMap<Name, raw::ArtifactRaw>> = OrderMap::new();
+    let mut files: IndexMap<PathArc, IndexMap<Name, raw::ArtifactRaw>> = IndexMap::new();
     for art in project.artifacts.values() {
         let art = ArtifactIm::from(art.clone());
         let (file, name, raw) = art.into_raw();
-        let entry = files.entry(file).or_insert_with(OrderMap::new);
+        let entry = files.entry(file).or_insert_with(IndexMap::new);
         entry.insert(name, raw);
     }
 
@@ -414,7 +414,7 @@ fn save_project(lints: &mut lint::Categorized, project: &Project) {
                     }
 
                     let file = handle_err!(PathFile::create(&path));
-                    let mut arts: OrderMap<Name, raw::ArtifactRaw> = arts;
+                    let mut arts: IndexMap<Name, raw::ArtifactRaw> = arts;
                     arts.sort_keys();
                     let text = match raw::ArtFileType::from_path(&file) {
                         Some(raw::ArtFileType::Toml) => expect!(toml::to_string(&arts)),

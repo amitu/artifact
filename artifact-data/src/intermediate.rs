@@ -40,7 +40,7 @@ impl ArtifactImExt for ArtifactIm {
                 strip_auto_partofs(&name, &mut p.0);
                 p.drain(..).collect()
             })
-            .unwrap_or_else(OrderSet::new);
+            .unwrap_or_else(IndexSet::new);
         partof.sort();
 
         ArtifactIm {

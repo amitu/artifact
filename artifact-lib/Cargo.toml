@@ -11,7 +11,7 @@ serde_derive = "1.*"
 failure = "0.1.1"
 failure_derive = "0.1.1"
 expect_macro = "0.2.0"
-ordermap = {version="0.4.1", features=["serde-1"]}
+indexmap = {version="1.0.0", features=["serde-1"]}
 ergo_std = "0.0.1"
 ergo_config = "0.0.1"
 siphasher = "0.2.2"

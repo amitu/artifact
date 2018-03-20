@@ -41,7 +41,7 @@ pub enum ArtifactOpAssert {
 pub struct ArtifactImAssert {
     pub name: Name,
     pub file: String,
-    pub partof: OrderSet<Name>,
+    pub partof: IndexSet<Name>,
     pub done: Option<String>,
     pub text: String,
 }
@@ -49,8 +49,8 @@ pub struct ArtifactImAssert {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProjectAssert {
     pub paths: ProjectPathsAssert,
-    pub code_impls: OrderMap<Name, ImplCodeAssert>,
-    pub artifacts: OrderMap<Name, ArtifactAssert>,
+    pub code_impls: IndexMap<Name, ImplCodeAssert>,
+    pub artifacts: IndexMap<Name, ArtifactAssert>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -65,12 +65,12 @@ pub struct ProjectPathsAssert {
 pub struct ArtifactAssert {
     pub name: Name,
     pub file: String,
-    pub partof: OrderSet<Name>,
-    pub parts: OrderSet<Name>,
+    pub partof: IndexSet<Name>,
+    pub parts: IndexSet<Name>,
     pub completed: Completed,
     pub text: String,
     pub impl_: ImplAssert,
-    pub subnames: OrderSet<SubName>,
+    pub subnames: IndexSet<SubName>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -84,7 +84,7 @@ pub enum ImplAssert {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ImplCodeAssert {
     primary: Option<CodeLocAssert>,
-    secondary: OrderMap<String, CodeLocAssert>,
+    secondary: IndexMap<String, CodeLocAssert>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -226,7 +226,7 @@ impl CategorizedAssert {
 // HELPERS
 
 /// Add the path prefix to a list of strings
-fn prefix_paths(base: &PathAbs, ends: &[String]) -> OrderSet<PathAbs> {
+fn prefix_paths(base: &PathAbs, ends: &[String]) -> IndexSet<PathAbs> {
     ends.iter()
         .map(|e| match PathAbs::new(base.join(e)) {
             Ok(p) => p,

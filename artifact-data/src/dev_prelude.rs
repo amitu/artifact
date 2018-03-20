@@ -26,7 +26,7 @@ use std::fs;
 pub(crate) use artifact_lib::*;
 pub(crate) use artifact_lib;
 
-pub(crate) use ordermap::{OrderMap, OrderSet};
+pub(crate) use indexmap::{IndexMap, IndexSet};
 
 pub(crate) use std::result;
 pub(crate) use failure::Error;

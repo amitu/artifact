@@ -21,16 +21,16 @@ use test::dev_prelude::*;
 use graph::{self, round_ratio};
 
 /// create the `partof`s and the graphs
-fn simple_graph() -> (OrderMap<Name, OrderSet<Name>>, graph::Graphs) {
-    let partofs = ordermap!{
-        name!("REQ-aaa") => orderset!{},
-        name!("REQ-bbb") => orderset!{name!("REQ-aaa")},
-        name!("REQ-ccc") => orderset!{name!("REQ-bbb")},
-        name!("SPC-bbb") => orderset!{name!("REQ-bbb")},
-        name!("SPC-bbb-a") => orderset!{name!("SPC-bbb")},
-        name!("SPC-bbb-b") => orderset!{name!("SPC-bbb")},
-        name!("TST-aaa") => orderset!{name!("SPC-bbb")},
-        name!("TST-aaa-a") => orderset!{name!("TST-aaa")},
+fn simple_graph() -> (IndexMap<Name, IndexSet<Name>>, graph::Graphs) {
+    let partofs = indexmap!{
+        name!("REQ-aaa") => indexset!{},
+        name!("REQ-bbb") => indexset!{name!("REQ-aaa")},
+        name!("REQ-ccc") => indexset!{name!("REQ-bbb")},
+        name!("SPC-bbb") => indexset!{name!("REQ-bbb")},
+        name!("SPC-bbb-a") => indexset!{name!("SPC-bbb")},
+        name!("SPC-bbb-b") => indexset!{name!("SPC-bbb")},
+        name!("TST-aaa") => indexset!{name!("SPC-bbb")},
+        name!("TST-aaa-a") => indexset!{name!("TST-aaa")},
     };
 
     let graphs = graph::determine_graphs(&partofs);
@@ -41,15 +41,15 @@ fn simple_graph() -> (OrderMap<Name, OrderSet<Name>>, graph::Graphs) {
 fn sanity_determine_parts() {
     let (_, graphs) = simple_graph();
     let mut parts = graph::determine_parts(&graphs);
-    let mut expected = ordermap!{
-        name!("REQ-aaa") => orderset!{name!("REQ-bbb")},
-        name!("REQ-bbb") => orderset!{name!("REQ-ccc"), name!("SPC-bbb")},
-        name!("REQ-ccc") => orderset!{},
-        name!("SPC-bbb") => orderset!{name!("SPC-bbb-a"), name!("SPC-bbb-b"), name!("TST-aaa")},
-        name!("SPC-bbb-a") => orderset!{},
-        name!("SPC-bbb-b") => orderset!{},
-        name!("TST-aaa") => orderset!{name!("TST-aaa-a")},
-        name!("TST-aaa-a") => orderset!{},
+    let mut expected = indexmap!{
+        name!("REQ-aaa") => indexset!{name!("REQ-bbb")},
+        name!("REQ-bbb") => indexset!{name!("REQ-ccc"), name!("SPC-bbb")},
+        name!("REQ-ccc") => indexset!{},
+        name!("SPC-bbb") => indexset!{name!("SPC-bbb-a"), name!("SPC-bbb-b"), name!("TST-aaa")},
+        name!("SPC-bbb-a") => indexset!{},
+        name!("SPC-bbb-b") => indexset!{},
+        name!("TST-aaa") => indexset!{name!("TST-aaa-a")},
+        name!("TST-aaa-a") => indexset!{},
     };
 
     parts.sort_keys();
@@ -59,9 +59,9 @@ fn sanity_determine_parts() {
 
 #[test]
 fn sanity_determine_graphs() {
-    let partofs = ordermap!{
-        name!("REQ-a") => orderset!{},
-        name!("TST-a") => orderset!{},
+    let partofs = indexmap!{
+        name!("REQ-a") => indexset!{},
+        name!("TST-a") => indexset!{},
     };
     let graphs = graph::determine_graphs(&partofs);
     assert_eq!(graphs.full.node_count(), 2);
@@ -74,13 +74,13 @@ fn sanity_determine_completed() {
     let (_, graphs) = simple_graph();
 
     let loc = CodeLoc::new(&PathFile::mock("/fake"), 1);
-    let impls = ordermap!{
+    let impls = indexmap!{
         name!("REQ-aaa") => Impl::NotImpl,
         name!("REQ-bbb") => Impl::NotImpl,
         name!("REQ-ccc") => Impl::Done("foo".into()),
         name!("SPC-bbb") => Impl::Code(ImplCode {
             primary: Some(loc.clone()),
-            secondary: ordermap!{
+            secondary: indexmap!{
                 subname!(".done1") => loc.clone(),
                 subname!(".done2") => loc.clone(),
             },
@@ -88,33 +88,33 @@ fn sanity_determine_completed() {
         name!("SPC-bbb-a") => Impl::NotImpl,
         name!("SPC-bbb-b") => Impl::Code(ImplCode {
             primary: None,
-            secondary: ordermap!{
+            secondary: indexmap!{
                 subname!(".done") => loc.clone(),
             },
         }),
         name!("TST-aaa") => Impl::NotImpl,
         name!("TST-aaa-a") => Impl::Code(ImplCode {
             primary: Some(loc.clone()),
-            secondary: ordermap!{},
+            secondary: indexmap!{},
         }),
     };
-    let subnames = ordermap!{
-        name!("REQ-aaa") => orderset!{},
-        name!("REQ-bbb") => orderset!{subname!(".notdone")},
-        name!("REQ-ccc") => orderset!{},
-        name!("SPC-bbb") => orderset!{
+    let subnames = indexmap!{
+        name!("REQ-aaa") => indexset!{},
+        name!("REQ-bbb") => indexset!{subname!(".notdone")},
+        name!("REQ-ccc") => indexset!{},
+        name!("SPC-bbb") => indexset!{
             subname!(".done1"),
             subname!(".done2"),
             subname!(".notdone"),
         },
-        name!("SPC-bbb-a") => orderset!{},
-        name!("SPC-bbb-b") => orderset!{
+        name!("SPC-bbb-a") => indexset!{},
+        name!("SPC-bbb-b") => indexset!{
             subname!(".done"),
             subname!(".notdone1"),
             subname!(".notdone2"),
         },
-        name!("TST-aaa") => orderset!{},
-        name!("TST-aaa-a") => orderset!{
+        name!("TST-aaa") => indexset!{},
+        name!("TST-aaa-a") => indexset!{
             subname!(".notdone"),
         },
     };
@@ -130,7 +130,7 @@ fn sanity_determine_completed() {
     let tr_spc_bbb = tr_tst_aaa_a / 3.;
     let tr_req_bbb = (tr_spc_bbb  + 1. /*req-ccc*/) / 2.;
 
-    let mut expected = ordermap!{
+    let mut expected = indexmap!{
         name!("REQ-aaa") => C {tst: round_ratio(tr_req_bbb), spc: round_ratio(req_bbb)},
         name!("REQ-bbb") => C {tst: round_ratio(tr_req_bbb), spc: round_ratio(req_bbb)},
         name!("REQ-ccc") => C {tst: 1.0, spc: 1.},

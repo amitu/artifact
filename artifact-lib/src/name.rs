@@ -28,7 +28,7 @@ use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 use ergo_std::*;
 use ergo_config::*;
 use failure::*;
-use ordermap::*;
+use indexmap::*;
 
 // EXPORTED TYPES AND FUNCTIONS
 
@@ -286,7 +286,7 @@ impl FromStr for Name {
 // PUBLIC METHODS
 
 /// Parse subnames from the text field.
-pub fn parse_subnames(text: &str) -> OrderSet<SubName> {
+pub fn parse_subnames(text: &str) -> IndexSet<SubName> {
     TEXT_SUB_NAME_RE
         .captures_iter(text)
         .map(|cap| SubName::new_unchecked(cap.get(1).unwrap().as_str()))

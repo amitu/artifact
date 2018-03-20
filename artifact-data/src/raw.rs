@@ -91,9 +91,9 @@ impl<'de> Deserialize<'de> for TextRaw {
 pub(crate) fn join_artifacts_raw(
     lints: &Sender<lint::Lint>,
     mut art_ims: Vec<ArtifactIm>,
-) -> (OrderMap<Name, PathArc>, OrderMap<Name, ArtifactIm>) {
-    let mut files: OrderMap<Name, PathArc> = OrderMap::with_capacity(art_ims.len());
-    let mut artifacts = OrderMap::with_capacity(art_ims.len());
+) -> (IndexMap<Name, PathArc>, IndexMap<Name, ArtifactIm>) {
+    let mut files: IndexMap<Name, PathArc> = IndexMap::with_capacity(art_ims.len());
+    let mut artifacts = IndexMap::with_capacity(art_ims.len());
     for mut art in art_ims.drain(..) {
         if let Some(dup) = files.insert(art.name.clone(), art.file.clone()) {
             lints
@@ -147,7 +147,7 @@ pub(crate) fn load_file(lints: &Sender<lint::Lint>, send: &Sender<ArtifactIm>, f
         }
     };
 
-    let r: ::std::result::Result<OrderMap<Name, ArtifactRaw>, String> = match ty {
+    let r: ::std::result::Result<IndexMap<Name, ArtifactRaw>, String> = match ty {
         ArtFileType::Toml => toml::from_str(&text).map_err(|e| e.to_string()),
         ArtFileType::Md => from_markdown(text.as_bytes()).map_err(|e| e.to_string()),
         ArtFileType::Json => json::from_str(&text).map_err(|e| e.to_string()),
@@ -180,8 +180,8 @@ lazy_static!{
 
 /// #SPC-read-raw-markdown
 /// Load raw artifacts from a markdown stream
-pub(crate) fn from_markdown<R: Read>(stream: R) -> Result<OrderMap<Name, ArtifactRaw>> {
-    let mut out: OrderMap<Name, ArtifactRaw> = OrderMap::new();
+pub(crate) fn from_markdown<R: Read>(stream: R) -> Result<IndexMap<Name, ArtifactRaw>> {
+    let mut out: IndexMap<Name, ArtifactRaw> = IndexMap::new();
     let mut name: Option<Name> = None;
     let mut attrs: Option<String> = None;
     let mut other: Vec<String> = Vec::new();
@@ -233,7 +233,7 @@ struct AttrsRaw {
 
 /// Inserts the artifact based on parts gotten from markdown.
 fn insert_from_parts(
-    out: &mut OrderMap<Name, ArtifactRaw>,
+    out: &mut IndexMap<Name, ArtifactRaw>,
     name: &Name,
     attrs: Option<String>,
     other: &[String],
@@ -274,7 +274,7 @@ fn insert_from_parts(
 // WRITE MARKDOWN
 
 /// Convert the artifacts to markdown
-pub(crate) fn to_markdown(raw_artifacts: &OrderMap<Name, ArtifactRaw>) -> String {
+pub(crate) fn to_markdown(raw_artifacts: &IndexMap<Name, ArtifactRaw>) -> String {
     let mut out = String::new();
     for (name, raw) in raw_artifacts {
         push_artifact_md(&mut out, name, raw);

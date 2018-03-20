@@ -38,7 +38,7 @@ macro_rules! names_raw {
 /// This mostly exists to provide custom
 /// serialization/deserializtion for a better text user interface.
 #[derive(Clone, Default, Eq, PartialEq)]
-pub struct NamesRaw(pub(crate) OrderSet<Name>);
+pub struct NamesRaw(pub(crate) IndexSet<Name>);
 
 impl fmt::Debug for NamesRaw {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -47,21 +47,21 @@ impl fmt::Debug for NamesRaw {
 }
 
 impl Deref for NamesRaw {
-    type Target = OrderSet<Name>;
+    type Target = IndexSet<Name>;
 
-    fn deref(&self) -> &OrderSet<Name> {
+    fn deref(&self) -> &IndexSet<Name> {
         &self.0
     }
 }
 
 impl DerefMut for NamesRaw {
-    fn deref_mut(&mut self) -> &mut OrderSet<Name> {
+    fn deref_mut(&mut self) -> &mut IndexSet<Name> {
         &mut self.0
     }
 }
 
-impl From<OrderSet<Name>> for NamesRaw {
-    fn from(names: OrderSet<Name>) -> NamesRaw {
+impl From<IndexSet<Name>> for NamesRaw {
+    fn from(names: IndexSet<Name>) -> NamesRaw {
         NamesRaw(names)
     }
 }
