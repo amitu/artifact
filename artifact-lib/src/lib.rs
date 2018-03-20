@@ -12,18 +12,15 @@ extern crate ordermap;
 extern crate path_abs;
 extern crate siphasher;
 
+mod name;
+mod dev_prelude;
+pub mod lint;
+
 use std::fmt;
 use std::result;
 use siphasher::sip128::{Hasher128, SipHasher};
-use ergo_std::*;
-use ergo_config::*;
-use path_abs::*;
-use ordermap::*;
-use failure::*;
 
-mod name;
-pub mod lint;
-
+use dev_prelude::*;
 pub use name::{Name, SubName, Type};
 
 
@@ -230,7 +227,8 @@ impl From<Artifact> for ArtifactIm {
             },
             text: art.text,
         };
-        out.clean();
+        // FIXME:
+        // out.clean();
         out
     }
 }
@@ -319,15 +317,16 @@ struct IdPieces {
 }
 
 impl ArtifactOp {
-    pub(crate) fn clean(&mut self) {
-        match *self {
-            ArtifactOp::Create { ref mut artifact }
-            | ArtifactOp::Update {
-                ref mut artifact, ..
-            } => artifact.clean(),
-            _ => {}
-        }
-    }
+    // FIXME:
+    // pub(crate) fn clean(&mut self) {
+    //     match *self {
+    //         ArtifactOp::Create { ref mut artifact }
+    //         | ArtifactOp::Update {
+    //             ref mut artifact, ..
+    //         } => artifact.clean(),
+    //         _ => {}
+    //     }
+    // }
 
     fn id_pieces(&self) -> IdPieces {
         match *self {

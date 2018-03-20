@@ -22,9 +22,7 @@ use std::sync::mpsc::Sender;
 use std::error;
 use std::fmt;
 
-use ergo_std::*;
-use ergo_config::*;
-use path_abs::*;
+use dev_prelude::*;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 /// An artifact lint error or warning
