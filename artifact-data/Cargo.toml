@@ -1,6 +1,6 @@
 [package]
 authors = ["Garrett Berg <googberg@gmail.com>"]
-name = "artifact-data"
+name = "artifact_data"
 version = "0.1.0"
 
 [dependencies]
