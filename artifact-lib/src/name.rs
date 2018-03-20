@@ -73,8 +73,8 @@ pub enum NameError {
 ///
 /// # Examples
 /// ```rust
-/// #[macro_use] extern crate artifact_data;
-/// use artifact_data::{Name, SubName, Type};
+/// #[macro_use] extern crate artifact_lib;
+/// use artifact_lib::{Name, SubName, Type};
 /// use std::str::FromStr;
 ///
 /// # fn main() {
@@ -106,8 +106,8 @@ pub enum Type {
 ///
 /// # Examples
 /// ```rust
-/// #[macro_use] extern crate artifact_data;
-/// use artifact_data::{Name, SubName, Type};
+/// #[macro_use] extern crate artifact_lib;
+/// use artifact_lib::{Name, SubName, Type};
 /// use std::str::FromStr;
 ///
 /// # fn main() {
@@ -182,8 +182,8 @@ impl Name {
     ///
     /// # Examples
     /// ```rust
-    /// #[macro_use] extern crate artifact_data;
-    /// use artifact_data::Name;
+    /// #[macro_use] extern crate artifact_lib;
+    /// use artifact_lib::Name;
     /// use std::str::FromStr;
     ///
     /// # fn main() {
@@ -202,8 +202,8 @@ impl Name {
     ///
     /// # Examples
     /// ```rust
-    /// #[macro_use] extern crate artifact_data;
-    /// use artifact_data::Name;
+    /// #[macro_use] extern crate artifact_lib;
+    /// use artifact_lib::Name;
     /// use std::str::FromStr;
     ///
     /// # fn main() {
@@ -222,8 +222,8 @@ impl Name {
     ///
     /// # Examples
     /// ```rust
-    /// #[macro_use] extern crate artifact_data;
-    /// use artifact_data::{Name, SubName};
+    /// #[macro_use] extern crate artifact_lib;
+    /// use artifact_lib::{Name, SubName};
     /// use std::str::FromStr;
     ///
     /// # fn main() {
@@ -390,8 +390,8 @@ impl SubName {
     ///
     /// # Examples
     /// ```rust
-    /// #[macro_use] extern crate artifact_data;
-    /// use artifact_data::SubName;
+    /// #[macro_use] extern crate artifact_lib;
+    /// use artifact_lib::SubName;
     /// use std::str::FromStr;
     ///
     /// # fn main() {
@@ -409,8 +409,8 @@ impl SubName {
     ///
     /// # Examples
     /// ```rust
-    /// #[macro_use] extern crate artifact_data;
-    /// use artifact_data::SubName;
+    /// #[macro_use] extern crate artifact_lib;
+    /// use artifact_lib::SubName;
     /// use std::str::FromStr;
     ///
     /// # fn main() {
